@@ -99,21 +99,31 @@ class SoldierAnt:
         self.img='assets/ant.png'
         self.img=pygame.image.load(self.img).convert_alpha()
         self.img=pygame.transform.scale(self.img,(75,50))
-        self.rect=pygame.Rect(x,y,75,50)
+        self.rect=pygame.Rect(self.x-37.5,self.y-25,75,50)
         self.speed=200
         self.type=type
         self.is_moving=False
+        self.healthbar=pygame.Rect(x,y-50-30,75,5)
         if self.type=='black':
             self.hp=10
             self.dmg=2
+            self.range=0
+            self.attack_speed=1
+            self.attack_timer=0
+        elif self.type=='wood':
+            self.hp=5
+            self.range=500
+            self.dmg=0
             self.range=50
             self.attack_speed=1
             self.attack_timer=0
-        self.healthbar=pygame.Rect(x,y-50-30,75,5)
+        self.rangerect=pygame.Rect(self.x-37.5-self.range,self.y-25-self.range,75+self.range,50+self.range)
     def draw(self,screen):
-        screen.blit(self.img, (self.x-37.5, self.y-50))
+        screen.blit(self.img, (self.x-37.5, self.y-25))
     def update(self):
-        self.rect=pygame.Rect(self.x,self.y,75,50)
+        self.rect=pygame.Rect(self.x-37.5,self.y-25,75,50)
+    def updaterange(self):
+        self.rangerect=pygame.Rect(self.x-37.5-self.range/2,self.y-25-self.range/2,75+self.range,50+self.range)
     def move_towards(self,dt):
         dx=self.target_x-self.x
         dy=self.target_y-self.y
@@ -133,6 +143,21 @@ class SoldierAnt:
     def hb(self,sreen):
         pygame.draw.rect(screen,red,self.losthealthbar)
         pygame.draw.rect(screen,green,self.healthbar)
+class Acid:
+    def __init__(self,x,y,angle):
+        self.direction = angle
+        self.x=x
+        self.y=y
+        self.rect=pygame.Rect(self.x,self.y,10,10)
+        self.speed=100
+        self.dmg=2
+    def draw(self,screen):
+        pygame.draw.rect(screen,green,self.rect)
+    def update(self):
+        self.rect=pygame.Rect(self.x,self.y,10,10)
+    def move(self,dt):
+        self.x+=dt*self.speed*math.cos(self.direction/180*math.pi)
+        self.y+=dt*self.speed*math.sin(self.direction/180*math.pi)
 class Enemy:
     def __init__(self,x,y,type):
         self.x=x
@@ -143,7 +168,7 @@ class Enemy:
             self.img='assets/mantis.png'
             self.img=pygame.image.load(self.img).convert_alpha()
             self.img=pygame.transform.scale(self.img,(450,300))
-            self.rect=pygame.Rect(x,y,450,300)
+            self.rect=pygame.Rect(x-225,y-150,450,300)
             self.speed=100
             self.hp=250
             self.dmg=3
@@ -155,7 +180,7 @@ class Enemy:
     def draw(self,screen):
         screen.blit(self.img, (self.x-225, self.y-150))
     def update(self):
-        self.rect=pygame.Rect(self.x,self.y,150,100)
+        self.rect=pygame.Rect(self.x-225,self.y-150,450,300)
     def move_towards(self,dt):
         dx=self.target_x-self.x
         dy=self.target_y-self.y
@@ -191,6 +216,7 @@ mantis=Enemy(1000,400,'mantis')
 bosses=[mantis]
 soldiers=[SoldierAnt(0,0,'black')]
 ant_spawn_timer=6
+acids=[]
 
 #Game Loop
 while running:
@@ -238,24 +264,43 @@ while running:
             if ant_spawn_timer<0:
                 ant_spawn_timer=1
                 soldiers.append(SoldierAnt(0,0,'black'))
+                soldiers.append(SoldierAnt(0,0,'wood'))
         mantis.move_towards(dt)
         for soldier in soldiers:
             soldier.move_towards(dt)
+            soldier.update()
         mantis.update()
         for soldier in soldiers:
-            if not soldier.rect.colliderect(mantis.rect):
-                soldier.target_x=mantis.x+random.uniform(-255,255)
-                soldier.target_y=mantis.y+random.uniform(-150,150)
-                soldier.update()
-            if mantis.rect.colliderect(soldier.rect):
-                soldier.attack_timer+=dt
-                if soldier.attack_timer>=soldier.attack_speed:
-                    mantis.hp-=soldier.dmg
-                    if mantis.hp<=0:
-                        if bosses:
-                            bosses.remove(mantis)
-                    soldier.attack_timer=0
-
+            if not soldier.rangerect.colliderect(mantis.rect):
+                soldier.target_x=mantis.x+random.uniform(-255,255)-soldier.range
+                soldier.target_y=mantis.y+random.uniform(-150,150)-soldier.range    
+            else:
+                if soldier.type=='black':                
+                    soldier.attack_timer+=dt
+                    if soldier.attack_timer>=soldier.attack_speed:
+                        mantis.hp-=soldier.dmg
+                        soldier.attack_timer=0
+                elif soldier.type=='wood':
+                    if soldier.rect.colliderect(mantis.rect):
+                        soldier.target_x=mantis.x-255-random.uniform(0,soldier.range)
+                        soldier.target_y=mantis.y-255-random.uniform(0,soldier.range)
+                    soldier.attack_timer+=dt
+                    dy=soldier.target_y-soldier.y
+                    dx=soldier.target_x-soldier.x
+                    if soldier.attack_timer>=soldier.attack_speed:
+                        acids.append(Acid(soldier.x,soldier.y,math.degrees(math.atan2(dy,dx))))
+                        soldier.attack_timer=0
+            if mantis.hp<=0:
+                if bosses:
+                    bosses.remove(mantis)
+        for acid in acids:
+            acid.update()
+            if acid.rect.colliderect(mantis.rect):
+                mantis.hp-=acid.dmg
+                acids.remove(acid)
+            if mantis.hp<=0:
+                if bosses:
+                    bosses.remove(mantis)
         mantis.update()
         nearest_soldier=None
         for soldier in soldiers:
@@ -308,6 +353,11 @@ while running:
             soldier.draw(screen)
             soldier.hbupdate()
             soldier.hb(screen)
+            soldier.updaterange()
+        for acid in acids:
+            acid.draw(screen)
+            acid.update()
+            acid.move(dt)
 
     pygame.display.update()
 
