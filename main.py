@@ -216,10 +216,20 @@ class Enemy:
             self.range=100
             self.attack_speed=1
             self.attack_timer=0
-        if type=='spider':
-            pass
+        elif type=='grasshopper':
+            self.img='assets/grasshopper.jpg'
+            self.img=pygame.image.load(self.img).convert_alpha()
+            self.img=pygame.transform.scale(self.img,(450,300))
+            self.rect=pygame.Rect(x-225,y-150,450,300)
+            self.speed=10
+            self.hp=250
+            self.maxhp=250
+            self.dmg=3
+            self.range=100
+            self.attack_speed=1
+            self.attack_timer=0
         self.healthbar=pygame.Rect(x,y-50-150,450,5)
-        self.losthealthbar=pygame.Rect(x,y-50-150,450,5)
+        self.losthealthbar=pygame.Rect(x,y-50-150,450,5)            
     def draw(self,screen):
         screen.blit(self.img, (self.x-225, self.y-150))
     def update(self):
@@ -264,6 +274,7 @@ running=True
 
 #Combat Stage
 mantis=Enemy(1000,400,'mantis')
+grasshopper=Enemy(1000,400,'grasshopper')
 spider=Enemy(1000,400,'spider')
 bosses=[mantis]
 soldiers=[SoldierAnt(0,0,'black')]
@@ -287,8 +298,12 @@ while running:
             stage='collecting'
         if keys[pygame.K_2]:
             stage='combat'  
+            choosecombat=True
         if keys[pygame.K_0]:
             day+=0.5
+        if keys[pygame.K_3]:
+            stage='combat2'
+            choosecombat=True  
 
 
 
@@ -314,71 +329,81 @@ while running:
             vitamin+=1
         if vitamin>=10:
             stage='combat'
-    if stage=='combat':
+    if stage=='combat' or stage=='combat2':
+        if choosecombat:
+            if stage=='combat':
+                bosses.append(mantis)
+                if len(bosses)>1:
+                    bosses.pop(0)
+            elif stage=='combat2':
+                bosses.append(grasshopper)
+                if len(bosses)>1:
+                    bosses.pop(0)
+            choosecombat=False
         if bosses:
             ant_spawn_timer-=dt
             if ant_spawn_timer<0:
                 ant_spawn_timer=0.5
                 soldiers.append(SoldierAnt(0,0,'black'))
                 soldiers.append(SoldierAnt(0,0,'wood'))
-            mantis.move_towards(dt)
+            bosses[0].move_towards(dt)
             for soldier in soldiers:
                 soldier.move_towards(dt)
                 soldier.update()
-            mantis.update()
+            bosses[0].update()
             for soldier in soldiers:
-                if not soldier.rangerect.colliderect(mantis.rect):
-                    soldier.target_x=mantis.x+random.uniform(-255,255)-soldier.range
-                    soldier.target_y=mantis.y+random.uniform(-150,150)-soldier.range    
+                if not soldier.rangerect.colliderect(bosses[0].rect):
+                    soldier.target_x=bosses[0].x+random.uniform(-255,255)-soldier.range
+                    soldier.target_y=bosses[0].y+random.uniform(-150,150)-soldier.range    
                 else:
                     if soldier.type=='black':                
                         soldier.attack_timer+=dt
                         if soldier.attack_timer>=soldier.attack_speed:
-                            mantis.hp-=soldier.dmg
+                            bosses[0].hp-=soldier.dmg
                             soldier.attack_timer=0
                     elif soldier.type=='wood':
-                        if soldier.rect.colliderect(mantis.rect):
-                            soldier.target_x=mantis.x-255-random.uniform(0,soldier.range)
-                            soldier.target_y=mantis.y-255-random.uniform(0,soldier.range)
+                        if soldier.rect.colliderect(bosses[0].rect):
+                            soldier.target_x=bosses[0].x-255-random.uniform(0,soldier.range)
+                            soldier.target_y=bosses[0].y-255-random.uniform(0,soldier.range)
                         soldier.attack_timer+=dt
                         if soldier.attack_timer>=soldier.attack_speed:
-                            dy=mantis.y-soldier.y
-                            dx=mantis.x-soldier.x
+                            dy=bosses[0].y-soldier.y
+                            dx=bosses[0].x-soldier.x
                             acids.append(Acid(soldier.x,soldier.y,math.degrees(math.atan2(dy,dx))))
                             soldier.attack_timer=0
 
         for acid in acids:
             acid.update()
-            if acid.rect.colliderect(mantis.rect):
-                mantis.hp-=acid.dmg
+            if acid.rect.colliderect(bosses[0].rect):
+                bosses[0].hp-=acid.dmg
                 acids.remove(acid)
-            if mantis.hp<=0:
+            if bosses[0].hp<=0:
                 try:
-                    bosses.remove(mantis)
+                    bosses.remove(bosses[0])
                 except ValueError:
                     pass
         if bosses:
-            mantis.update()
+            bosses[0].update()
             nearest_soldier=None
-            mantis.attack_timer+=dt
+            bosses[0].attack_timer+=dt
             for soldier in soldiers:
                 if nearest_soldier==None:
                     nearest_soldier=soldier
                 else:
-                    if math.hypot(soldier.x-mantis.x,soldier.y-mantis.y)<math.hypot(nearest_soldier.x-mantis.x,nearest_soldier.y-mantis.y):
+                    if math.hypot(soldier.x-bosses[0].x,soldier.y-bosses[0].y)<math.hypot(nearest_soldier.x-bosses[0].x,nearest_soldier.y-bosses[0].y):
                         nearest_soldier=soldier
                     else:
-                        if math.hypot(soldier.x-mantis.x,soldier.y-mantis.y)<math.hypot(nearest_soldier.x-mantis.x,nearest_soldier.y-mantis.y):
+                        if math.hypot(soldier.x-bosses[0].x,soldier.y-bosses[0].y)<math.hypot(nearest_soldier.x-bosses[0].x,nearest_soldier.y-bosses[0].y):
                             nearest_soldier=soldier
                 if nearest_soldier!=None:
-                    mantis.target_x=nearest_soldier.x
-                    mantis.target_y=nearest_soldier.y
-                    if mantis.rect.colliderect(nearest_soldier.rect):
-                        if mantis.attack_timer>=mantis.attack_speed:
-                            nearest_soldier.hp-=mantis.dmg
+                    bosses[0].target_x=nearest_soldier.x
+                    bosses[0].target_y=nearest_soldier.y
+                    if bosses[0].rect.colliderect(nearest_soldier.rect):
+                        if bosses[0].attack_timer>=bosses[0].attack_speed:
+                            nearest_soldier.hp-=bosses[0].dmg
                             if nearest_soldier.hp<=0:
                                 soldiers.remove(nearest_soldier)
-                            mantis.attack_timer=0
+                            bosses[0].attack_timer=0
 
 
 
@@ -415,7 +440,7 @@ while running:
             pygame.draw.rect(screen,(255,255,0),(pygame.Rect(150+i,50,50,50)))
         pygame.draw.rect(screen,(255,0,0),(pygame.Rect(150+day%7*200,50,50,50)))
 
-    if stage=='combat':
+    if stage=='combat'or stage=='combat2':
         screen.fill((255, 255, 255))
         
         for boss in bosses:
