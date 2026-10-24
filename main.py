@@ -415,7 +415,6 @@ while running:
             soldier.hbupdate()
             soldier.hb(screen)
             soldier.updaterange()
-            pygame.draw.rect(screen,red,soldier.rect,width=1)
         for acid in acids:
             acid.draw(screen)
             acid.update()
