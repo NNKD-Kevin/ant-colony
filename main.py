@@ -190,9 +190,10 @@ class Enemy:
         
         
 #Collecting Stage
-player=WorkerAnt(0,400)
+
 foods=[]
 nest=Nest(100,50)
+player=WorkerAnt(100,50)
 food_spawn_timer=0
 vitamin=0
 running=True
@@ -244,47 +245,47 @@ while running:
             player.carrying=None
             vitamin+=1
     if stage=='combat':
-        ant_spawn_timer-=dt
-        if bosses:    
+        if bosses:
+            ant_spawn_timer-=dt
             if ant_spawn_timer<0:
                 ant_spawn_timer=1
                 soldiers.append(SoldierAnt(0,0,'black'))
-        mantis.move_towards(dt)
-        for soldier in soldiers:
-            soldier.move_towards(dt)
-        mantis.update()
-        for soldier in soldiers:
-            if not soldier.rect.colliderect(mantis.rect):
-                soldier.target_x=mantis.x+random.uniform(-255,255)
-                soldier.target_y=mantis.y+random.uniform(-150,150)
-                soldier.update()
-            if mantis.rect.colliderect(soldier.rect):
-                soldier.attack_timer+=dt
-                if soldier.attack_timer>=soldier.attack_speed:
-                    mantis.hp-=soldier.dmg
-                    if mantis.hp<=0:
-                        if bosses:
-                            bosses.remove(mantis)
-                    soldier.attack_timer=0
+            bosses[0].move_towards(dt)
+            for soldier in soldiers:
+                soldier.move_towards(dt)
+            bosses[0].update()
+            for soldier in soldiers:
+                if not soldier.rect.colliderect(bosses[0].rect):
+                    soldier.target_x=bosses[0].x+random.uniform(-255,255)
+                    soldier.target_y=bosses[0].y+random.uniform(-150,150)
+                    soldier.update()
+                if bosses[0].rect.colliderect(soldier.rect):
+                    soldier.attack_timer+=dt
+                    if soldier.attack_timer>=soldier.attack_speed:
+                        bosses[0].hp-=soldier.dmg
+                        if bosses[0].hp<=0:
+                            if bosses:
+                                bosses.remove(bosses[0])
+                        soldier.attack_timer=0
 
-        mantis.update()
-        nearest_soldier=None
-        for soldier in soldiers:
-            if nearest_soldier==None:
-                nearest_soldier=soldier
-            else:
-                if math.hypot(soldier.x-mantis.x,soldier.y-mantis.y)<math.hypot(nearest_soldier.x-mantis.x,nearest_soldier.y-mantis.y):
+            bosses[0].update()
+            nearest_soldier=None
+            for soldier in soldiers:
+                if nearest_soldier==None:
                     nearest_soldier=soldier
-        if nearest_soldier!=None:
-            mantis.target_x=nearest_soldier.x
-            mantis.target_y=nearest_soldier.y
-            if mantis.rect.colliderect(nearest_soldier.rect):
-                mantis.attack_timer+=dt
-                if mantis.attack_timer>=mantis.attack_speed:
-                    nearest_soldier.hp-=mantis.dmg
-                    if nearest_soldier.hp<=0:
-                        soldiers.remove(nearest_soldier)
-                    mantis.attack_timer=0
+                else:
+                    if math.hypot(soldier.x-bosses[0].x,soldier.y-bosses[0].y)<math.hypot(nearest_soldier.x-bosses[0].x,nearest_soldier.y-bosses[0].y):
+                        nearest_soldier=soldier
+            if nearest_soldier!=None:
+                bosses[0].target_x=nearest_soldier.x
+                bosses[0].target_y=nearest_soldier.y
+                if bosses[0].rect.colliderect(nearest_soldier.rect):
+                    bosses[0].attack_timer+=dt
+                    if bosses[0].attack_timer>=bosses[0].attack_speed:
+                        nearest_soldier.hp-=bosses[0].dmg
+                        if nearest_soldier.hp<=0:
+                            soldiers.remove(nearest_soldier)
+                        bosses[0].attack_timer=0
 
 
 
