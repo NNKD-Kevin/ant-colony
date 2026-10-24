@@ -218,8 +218,8 @@ class Enemy:
             walking_path='assets/mantis-walking'
             attack1_path='assets/mantis-attack-1'
             self.walks=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{walking_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(walking_path) if f.endswith(".png")]
-            self.attacks1=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attack1_path}/{f}").convert_alpha(), (34*10,74*10)),-90) for f in os.listdir(attack1_path) if f.endswith(".png")]
-            self.rect=pygame.Rect(x-225,y-150,450,300)
+            self.attacks1=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attack1_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(attack1_path) if f.endswith(".png")]
+            self.rect=pygame.Rect(x-34*5,y-54*5,250,200)
             self.speed=100
             self.hp=500
             self.maxhp=500
@@ -258,7 +258,7 @@ class Enemy:
     def draw(self,screen):
         screen.blit(self.img, (self.x-225, self.y-150))
     def update(self):
-        self.rect=pygame.Rect(self.x-225,self.y-150,450,300)
+        self.rect=pygame.Rect(self.x-34*5,self.y,350,250)
     def move_towards(self,dt):
         dx=self.target_x-self.x
         dy=self.target_y-self.y
@@ -376,7 +376,7 @@ while running:
         if bosses:
             ant_spawn_timer-=dt
             if ant_spawn_timer<0:
-                ant_spawn_timer=0.5
+                ant_spawn_timer=4
                 soldiers.append(SoldierAnt(1500,850,'black'))
                 soldiers.append(SoldierAnt(1500,850,'wood'))
             if not bosses[0].is_attacking:
