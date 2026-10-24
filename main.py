@@ -29,11 +29,18 @@ class WorkerAnt:
         self.speed=200
         self.is_moving=False
         self.carrying=None
+        images_path='assets/carpenter-ant'
+        self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (19*2,24*2)) for f in os.listdir(images_path) if f.endswith(".png")]
+        
         self.img=pygame.image.load(self.img).convert_alpha()
         self.img=pygame.transform.scale(self.img,(75,50))
         self.rect=pygame.Rect(x,y,75,50)
+        self.animation_timer=0
+        self.animation_speed=0.02
+        self.frame_index=0
+        self.img=self.images[self.frame_index]
     def draw(self,screen):
-        screen.blit(self.img, (self.x, self.y))
+        screen.blit(self.img, (self.x-37.5, self.y-25))
     def update(self):
         self.rect=pygame.Rect(self.x,self.y,50,50)
     def move_towards(self,dt):
@@ -124,7 +131,7 @@ class Enemy:
             self.attack_speed=1
             self.attack_timer=0
     def draw(self,screen):
-        screen.blit(self.img, (self.x, self.y))
+        screen.blit(self.img, (self.x-225, self.y-150))
     def update(self):
         self.rect=pygame.Rect(self.x,self.y,150,100)
     def move_towards(self,dt):
@@ -239,10 +246,6 @@ while running:
 
 
 
-                
-
-        
-
 
 
 
@@ -257,6 +260,12 @@ while running:
         if player.carrying!=None:
             pygame.draw.rect(screen,player.carrying.color,(player.x,player.y-25,50,50))
         draw_text(str(vitamin),basic_font,(0,0,0),1000,0)
+        if player.is_moving==True:
+            player.animation_timer+=dt
+            if player.animation_timer>player.animation_speed:
+                player.animation_timer=0
+                player.frame_index+=1
+                player.img=player.images[player.frame_index%len(player.images)]
     if stage=='combat':
         screen.fill((255, 255, 255))
         for boss in bosses:
