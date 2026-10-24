@@ -10,9 +10,13 @@ pygame.display.set_caption("Ant Colony")
 stage='collecting'
 clock=pygame.time.Clock()
 
-basic_font=pygame.font.Font('assets/font.ttf', 50)
+basic_font=pygame.font.Font('assets/font.ttf', 70)
 farmground=pygame.image.load('assets/farmground.png').convert()
+battleground=pygame.image.load('assets/battleground.png').convert()
 farmground=pygame.transform.scale(farmground,(1500,850))
+battleground=pygame.transform.scale(battleground,(1500,850))
+food_icon=pygame.image.load('assets/food/food-icon.png').convert_alpha()
+food_icon=pygame.transform.scale(food_icon,(100,100))
 
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
@@ -76,8 +80,10 @@ class Food:
         self.x=x
         self.y=y
         self.count=0
-        if gacha<50:
+        if gacha<40:
             self.type='bread'
+        elif 40<gacha<50:
+            self.type='chips'
         elif gacha>=50 and gacha<91:
             self.type='apple'
         elif gacha>=91:
@@ -92,6 +98,11 @@ class Food:
             self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (20*8, 19*8)) for f in os.listdir(images_path) if f.endswith(".png")]
             self.rect=pygame.Rect(x,y,20*8,19*8)
             self.crumb=pygame.transform.scale(pygame.image.load('assets/food/apple-crumb.png').convert_alpha(), (5*12,5*12))
+        if self.type=='chips':
+            images_path='assets/food/chips'
+            self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (35*6, 22*6)) for f in os.listdir(images_path) if f.endswith(".png")]
+            self.rect=pygame.Rect(x,y,35*6,22*6)
+            self.crumb=pygame.transform.scale(pygame.image.load('assets/food/chips-crumb.png').convert_alpha(), (5*10,5*10  ))
         if self.type=='mosquito':
             images_path='assets/food/dead-mosquito'
             self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (59*2, 42*2)) for f in os.listdir(images_path) if f.endswith(".png")]
@@ -428,20 +439,21 @@ while running:
         player.draw(screen)
         if player.carrying!=None:
             screen.blit(player.carrying.crumb,(player.x-15,player.y-15))
-        draw_text(str(vitamin),basic_font,(0,0,0),1000,0)
+        
         if player.is_moving==True:
             player.animation_timer+=dt
             if player.animation_timer>player.animation_speed:
                 player.animation_timer=0
                 player.frame_index+=1
                 player.img=player.images[player.frame_index%len(player.images)]
-        pygame.draw.rect(screen,(255,200,0),timeline)
-        for i in range(0,1201,200):
-            pygame.draw.rect(screen,(255,255,0),(pygame.Rect(150+i,50,50,50)))
-        pygame.draw.rect(screen,(255,0,0),(pygame.Rect(150+day%7*200,50,50,50)))
+        pygame.draw.rect(screen,(240,219,211),(1250,20,220,120))
+        pygame.draw.rect(screen,(0,0,0),(1250,20,220,120),width=5)
+        screen.blit(food_icon,(1260,30))
+        draw_text(str(vitamin),basic_font,(0,0,0),1370,30)
+
 
     if stage=='combat'or stage=='combat2':
-        screen.fill((255, 255, 255))
+        screen.blit(battleground,(0,0))
         
         for boss in bosses:
             boss.draw(screen)
