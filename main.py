@@ -376,6 +376,14 @@ while running:
 
 
     #RENDER HANDLING
+    if stage=='nest':
+        screen.fill((255, 255, 255))
+        pygame.draw.rect(screen,(255,200,0),timeline)
+        for i in range(0,1201,200):
+            pygame.draw.rect(screen,(255,255,0),(pygame.Rect(150+i,50,50,50)))
+        pygame.draw.rect(screen,(255,0,0),(pygame.Rect(150+day%7*200,50,50,50)))
+
+
     if stage=='collecting':
         screen.blit(farmground,(0,0))
         for food in foods:
