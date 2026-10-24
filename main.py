@@ -15,7 +15,7 @@ basic_font=pygame.font.Font('assets/font.ttf', 50)
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     screen.blit(img, (x, y))
-
+green=(0,255,0)
 
 #Collecting Stage
 class WorkerAnt:
@@ -67,7 +67,7 @@ class Nest:
         self.y=y
         self.rect=pygame.Rect(x,y,100,100)
     def draw(self,screen):
-        pygame.draw.rect(screen,(0,255,0),self.rect)
+        pygame.draw.rect(screen,green,self.rect)
 
 #Comvat Stage
 class SoldierAnt:
@@ -89,8 +89,9 @@ class SoldierAnt:
             self.range=50
             self.attack_speed=1
             self.attack_timer=0
+        self.healthbar=pygame.Rect(x,y-50-50,75,5)
     def draw(self,screen):
-        screen.blit(self.img, (self.x, self.y))
+        screen.blit(self.img, (self.x-37.5, self.y-50))
     def update(self):
         self.rect=pygame.Rect(self.x,self.y,75,50)
     def move_towards(self,dt):
@@ -106,6 +107,10 @@ class SoldierAnt:
             self.is_moving=True
             self.x+=dx/distance*self.speed*dt
             self.y+=dy/distance*self.speed*dt
+    def hbupdate(self):
+        self.healthbar=pygame.Rect(self.x,self.y-50-50,75,5)
+    def hb(self,sreen):
+        pygame.draw.rect(screen,green,self.healthbar)
 class Enemy:
     def __init__(self,x,y,type):
         self.x=x
@@ -123,8 +128,9 @@ class Enemy:
             self.range=100
             self.attack_speed=1
             self.attack_timer=0
+        self.healthbar=pygame.Rect(x,y-50-150,450,5)
     def draw(self,screen):
-        screen.blit(self.img, (self.x, self.y))
+        screen.blit(self.img, (self.x-225, self.y-150))
     def update(self):
         self.rect=pygame.Rect(self.x,self.y,150,100)
     def move_towards(self,dt):
@@ -140,6 +146,10 @@ class Enemy:
             self.is_moving=True
             self.x+=dx/distance*self.speed*dt
             self.y+=dy/distance*self.speed*dt
+    def hbupdate(self):
+        self.healthbar=pygame.Rect(self.x,self.y-255-50,75,5)
+    def hb(self,sreen):
+        pygame.draw.rect(screen,green,self.healthbar)
         
         
 #Collecting Stage
@@ -263,6 +273,8 @@ while running:
             boss.draw(screen)
         for soldier in soldiers:
             soldier.draw(screen)
+            soldier.hbupdate()
+            soldier.hb(screen)
         draw_text('Mantis_HP:'+(str(mantis.hp)),basic_font,(0,0,0),1000,0)
 
     pygame.display.update()
