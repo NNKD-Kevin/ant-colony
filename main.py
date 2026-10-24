@@ -11,6 +11,8 @@ stage='collecting'
 clock=pygame.time.Clock()
 
 basic_font=pygame.font.Font('assets/font.ttf', 50)
+farmground=pygame.image.load('assets/farmground.png').convert()
+farmground=pygame.transform.scale(farmground,(1500,850))
 
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
@@ -33,14 +35,15 @@ class WorkerAnt:
         self.is_moving=False
         self.carrying=None
         images_path='assets/carpenter-ant'
-        self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (19*2,24*2)) for f in os.listdir(images_path) if f.endswith(".png")]
+        self.images=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (19*2,24*2)),-90) for f in os.listdir(images_path) if f.endswith(".png")]
         
         self.img=pygame.image.load(self.img).convert_alpha()
-        self.img=pygame.transform.scale(self.img,(75,50))
-        self.rect=pygame.Rect(x,y,75,50)
+        self.img=pygame.transform.scale(self.img,(19*2,24*2))
+        self.rect=pygame.Rect(x,y,19*2,24*2)
         self.animation_timer=0
         self.animation_speed=0.02
         self.frame_index=0
+        self.angle=0.0
         self.img=self.images[self.frame_index]
     def draw(self,screen):
         screen.blit(self.img, (self.x-37.5, self.y-25))
@@ -60,6 +63,13 @@ class WorkerAnt:
             self.is_moving=True
             self.x+=dx/distance*self.speed*dt
             self.y+=dy/distance*self.speed*dt
+        target_angle=math.degrees(math.atan2(dy,dx))
+        delta=(target_angle-self.angle+180)%360-180
+        self.angle += max(-3, min(3, delta))
+        self.angle%=360
+        frame=self.images[self.frame_index%len(self.images)]
+        self.img=pygame.transform.rotate(frame, -self.angle)
+
 class Food:
     def __init__(self,x,y,color):
         self.x=x
@@ -274,7 +284,7 @@ while running:
 
     #RENDER HANDLING
     if stage=='collecting':
-        screen.fill((255, 255, 255))
+        screen.blit(farmground,(0,0))
         nest.draw(screen)
         for food in foods:
             food.draw(screen)
