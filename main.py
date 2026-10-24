@@ -351,6 +351,7 @@ while running:
             player.carrying=None
             vitamin+=1
         if vitamin>=10:
+            choosecombat=True
             stage='combat'
     if stage=='combat' or stage=='combat2':
         if choosecombat:
@@ -394,7 +395,14 @@ while running:
                             dx=bosses[0].x-soldier.x
                             acids.append(Acid(soldier.x,soldier.y,math.degrees(math.atan2(dy,dx))))
                             soldier.attack_timer=0
-
+        if bosses[0].hp<=0:
+            try:
+                bosses.remove(bosses[0])
+            except ValueError:
+                pass
+            if stage='combat':
+                stage='combat2'
+                choosecombat=True
         for acid in acids:
             acid.update()
             if acid.rect.colliderect(bosses[0].rect):
@@ -405,6 +413,9 @@ while running:
                     bosses.remove(bosses[0])
                 except ValueError:
                     pass
+                if stage='combat':
+                    stage='combat2'
+                    choosecombat=True
         if bosses:
             bosses[0].update()
             nearest_soldier=None
