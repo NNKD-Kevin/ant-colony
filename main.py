@@ -82,7 +82,7 @@ class Food:
         self.count=0
         if gacha<40:
             self.type='bread'
-        elif 40<gacha<50:
+        elif 40<=gacha<50:
             self.type='chips'
         elif gacha>=50 and gacha<91:
             self.type='apple'
@@ -184,7 +184,7 @@ class SoldierAnt:
             self.y=24
         target_angle=math.degrees(math.atan2(dy,dx))
         delta=(target_angle-self.angle+180)%360-180
-        self.angle += max(-1, min(1, delta))
+        self.angle += max(-4, min(4, delta))
         self.angle%=360
         frame=self.images[self.frame_index%len(self.images)]
         self.img=pygame.transform.rotate(frame, -self.angle)
@@ -216,29 +216,35 @@ class Enemy:
         self.target_x=x
         self.target_y=y
         if type=='mantis':
-            self.img='assets/mantis.png'
-            self.img=pygame.image.load(self.img).convert_alpha()
-            self.img=pygame.transform.scale(self.img,(450,300))
+            walking_path='assets/mantis-walking'
+            self.images=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{walking_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(walking_path) if f.endswith(".png")]
             self.rect=pygame.Rect(x-225,y-150,450,300)
-            self.speed=10
+            self.speed=100
             self.hp=250
             self.maxhp=250
             self.dmg=3
             self.range=100
             self.attack_speed=1
             self.attack_timer=0
+            self.animation_timer=0
+            self.animation_speed=0.1
+            self.frame_index=0
+            self.img=self.images[self.frame_index]
         elif type=='grasshopper':
             self.img='assets/grasshopper.jpg'
             self.img=pygame.image.load(self.img).convert_alpha()
             self.img=pygame.transform.scale(self.img,(450,300))
             self.rect=pygame.Rect(x-225,y-150,450,300)
-            self.speed=10
+            self.speed=200
             self.hp=250
             self.maxhp=250
             self.dmg=3
             self.range=100
             self.attack_speed=1
             self.attack_timer=0
+
+        self.angle=0.0
+        self.is_moving=False
         self.healthbar=pygame.Rect(x,y-50-150,450,5)
         self.losthealthbar=pygame.Rect(x,y-50-150,450,5)            
     def draw(self,screen):
@@ -262,6 +268,12 @@ class Enemy:
             self.x=225     #chỉnh sau này tùy theo size boss
         if self.y<150:
             self.y=150
+        target_angle=math.degrees(math.atan2(dy,dx))
+        delta=(target_angle-self.angle+180)%360-180
+        self.angle += max(-1, min(1, delta))
+        self.angle%=360
+        frame=self.images[self.frame_index%len(self.images)]
+        self.img=pygame.transform.rotate(frame, -self.angle)
     def hbupdate(self):
         self.losthealthbar=pygame.Rect(250,0,1000,30)
         self.healthbar=pygame.Rect(250,0,1000*self.hp/self.maxhp,30)
@@ -284,11 +296,11 @@ vitamin=0
 running=True
 
 #Combat Stage
-mantis=Enemy(1000,400,'mantis')
+mantis=Enemy(200,200,'mantis')
 grasshopper=Enemy(1000,400,'grasshopper')
 spider=Enemy(1000,400,'spider')
 bosses=[mantis]
-soldiers=[SoldierAnt(0,0,'black')]
+soldiers=[]
 ant_spawn_timer=0
 acids=[]
 
@@ -355,8 +367,8 @@ while running:
             ant_spawn_timer-=dt
             if ant_spawn_timer<0:
                 ant_spawn_timer=0.5
-                soldiers.append(SoldierAnt(0,0,'black'))
-                soldiers.append(SoldierAnt(0,0,'wood'))
+                soldiers.append(SoldierAnt(1500,850,'black'))
+                soldiers.append(SoldierAnt(1500,850,'wood'))
             bosses[0].move_towards(dt)
             for soldier in soldiers:
                 soldier.move_towards(dt)
@@ -456,6 +468,12 @@ while running:
         screen.blit(battleground,(0,0))
         
         for boss in bosses:
+            if boss.is_moving==True:
+                boss.animation_timer+=dt
+                if boss.animation_timer>boss.animation_speed:
+                    boss.animation_timer=0
+                    boss.frame_index+=1
+                    boss.img=pygame.transform.rotate(boss.images[boss.frame_index%len(boss.images)], -boss.angle)
             boss.draw(screen)
             boss.hbupdate()
             boss.hb(screen)
@@ -465,7 +483,7 @@ while running:
                 if soldier.animation_timer>soldier.animation_speed:
                     soldier.animation_timer=0
                     soldier.frame_index+=1
-                    soldier.img=soldier.images[soldier.frame_index%len(soldier.images)]
+                    soldier.img=pygame.transform.rotate(soldier.images[soldier.frame_index%len(soldier.images)], -soldier.angle)
             soldier.draw(screen)
             soldier.hbupdate()
             soldier.hb(screen)
