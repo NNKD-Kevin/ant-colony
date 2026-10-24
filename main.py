@@ -154,7 +154,7 @@ running=True
 mantis=Enemy(1000,400,'mantis')
 bosses=[mantis]
 soldiers=[SoldierAnt(0,0,'black')]
-ant_spawn_timer=3
+ant_spawn_timer=6
 
 #Game Loop
 while running:
@@ -199,7 +199,7 @@ while running:
     if stage=='combat':
         ant_spawn_timer-=dt
         if ant_spawn_timer<0:
-            ant_spawn_timer=10
+            ant_spawn_timer=8
             soldiers.append(SoldierAnt(0,0,'black'))
         mantis.move_towards(dt)
         for soldier in soldiers:
