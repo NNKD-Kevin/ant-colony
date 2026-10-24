@@ -21,6 +21,9 @@ green=(0,255,0)
 red=(255,0,0)
 grey=(127,127,127)
 black=(0,0,0)
+week=1
+day=0
+
 
 #Collecting Stage
 class WorkerAnt:
@@ -71,16 +74,35 @@ class WorkerAnt:
         self.img=pygame.transform.rotate(frame, -self.angle)
 
 class Food:
-    def __init__(self,x,y,color):
+    def __init__(self,x,y,gacha):
         self.x=x
         self.y=y
-        self.count=4
-        self.color=color
-        self.rect=pygame.Rect(x,y,50,50)
+        self.count=0
+        if gacha<50:
+            self.type='bread'
+        elif gacha>=50 and gacha<91:
+            self.type='apple'
+        elif gacha>=91:
+            self.type='mosquito'
+        if self.type=='bread':
+            images_path='assets/food/bread'
+            self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (32*8, 20*8)) for f in os.listdir(images_path) if f.endswith(".png")]
+            self.rect=pygame.Rect(x,y,32*8,20*8)
+            self.crumb=pygame.transform.scale(pygame.image.load('assets/food/breadcrumb.png').convert_alpha(), (5*12,5*12))
+        if self.type=='apple':
+            images_path='assets/food/apple'
+            self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (20*8, 19*8)) for f in os.listdir(images_path) if f.endswith(".png")]
+            self.rect=pygame.Rect(x,y,20*8,19*8)
+            self.crumb=pygame.transform.scale(pygame.image.load('assets/food/apple-crumb.png').convert_alpha(), (5*12,5*12))
+        if self.type=='mosquito':
+            images_path='assets/food/dead-mosquito'
+            self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (59*2, 42*2)) for f in os.listdir(images_path) if f.endswith(".png")]
+            self.crumb=pygame.transform.scale(pygame.image.load('assets/food/dead-mosquito-crumb.png').convert_alpha(), (5*6,5*6))
+        self.img=self.images[self.count]
     def draw(self,screen):
-        pygame.draw.rect(screen,self.color,self.rect)
+        screen.blit(self.img, (self.x-16*8, self.y-10*8))
     def update(self):
-        self.rect=pygame.Rect(self.x,self.y,self.count*50,100)
+        self.rect=pygame.Rect(self.x,self.y,32*8,20*8)
 class Nest:
     def __init__(self,x,y):
         self.x=x
@@ -161,6 +183,8 @@ class Enemy:
             self.range=100
             self.attack_speed=1
             self.attack_timer=0
+        if type=='spider':
+            pass
         self.healthbar=pygame.Rect(x,y-50-150,450,5)
         self.losthealthbar=pygame.Rect(x,y-50-150,450,5)
     def draw(self,screen):
@@ -187,7 +211,10 @@ class Enemy:
         pygame.draw.rect(screen,grey,self.losthealthbar)
         pygame.draw.rect(screen,red,self.healthbar)
         pygame.draw.rect(screen,black,self.losthealthbar,width=5)
-        
+
+timeline=pygame.Rect(150,50,1200,30)
+
+
         
 #Collecting Stage
 
@@ -200,9 +227,12 @@ running=True
 
 #Combat Stage
 mantis=Enemy(1000,400,'mantis')
-bosses=[mantis]
+mantis2=Enemy(1000,0,'mantis')
+spider=Enemy(1000,400,'spider')
+bosses=[mantis,mantis2]
 soldiers=[SoldierAnt(0,0,'black')]
 ant_spawn_timer=6
+current_boss=mantis
 
 #Game Loop
 while running:
@@ -221,6 +251,8 @@ while running:
             stage='collecting'
         if keys[pygame.K_2]:
             stage='combat'  
+        if keys[pygame.K_0]:
+            day+=0.5
 
 
 
@@ -230,62 +262,65 @@ while running:
         food_spawn_timer-=dt
         if food_spawn_timer<0:
             food_spawn_timer=15
-            foods.append(Food(random.randint(0,1500),random.randint(0,850),(random.randint(0,255),random.randint(0,255),0))) 
+            foods.append(Food(random.randint(400,1500),random.randint(100,850),random.randint(0,100))) 
 
         
         player.update()
         for food in foods:
             food.update()
             if player.rect.colliderect(food.rect) and player.carrying==None:
-                food.count-=1
-                player.carrying=food
-                if food.count==0:
-                    foods.remove(food)
+                if food.count<5:
+                    food.count+=1
+                    food.img=food.images[food.count]
+                    player.carrying=food
         if player.rect.colliderect(nest.rect) and player.carrying:
             player.carrying=None
             vitamin+=1
+        if vitamin>=10:
+            stage='combat'
     if stage=='combat':
         if bosses:
             ant_spawn_timer-=dt
             if ant_spawn_timer<0:
-                ant_spawn_timer=1
+                ant_spawn_timer=0.5
                 soldiers.append(SoldierAnt(0,0,'black'))
-            bosses[0].move_towards(dt)
+            mantis.move_towards(dt)
             for soldier in soldiers:
                 soldier.move_towards(dt)
-            bosses[0].update()
+            mantis.update()
             for soldier in soldiers:
-                if not soldier.rect.colliderect(bosses[0].rect):
-                    soldier.target_x=bosses[0].x+random.uniform(-255,255)
-                    soldier.target_y=bosses[0].y+random.uniform(-150,150)
+                if not soldier.rect.colliderect(mantis.rect):
+                    soldier.target_x=mantis.x+random.uniform(-255,255)
+                    soldier.target_y=mantis.y+random.uniform(-150,150)
                     soldier.update()
-                if bosses[0].rect.colliderect(soldier.rect):
+                if mantis.rect.colliderect(soldier.rect):
                     soldier.attack_timer+=dt
                     if soldier.attack_timer>=soldier.attack_speed:
-                        bosses[0].hp-=soldier.dmg
-                        if bosses[0].hp<=0:
+                        mantis.hp-=soldier.dmg
+                        if mantis.hp<=0:
                             if bosses:
-                                bosses.remove(bosses[0])
+                                bosses.remove(mantis)
+                                stage='collecting'
                         soldier.attack_timer=0
 
-            bosses[0].update()
+            mantis.update()
             nearest_soldier=None
             for soldier in soldiers:
                 if nearest_soldier==None:
                     nearest_soldier=soldier
                 else:
-                    if math.hypot(soldier.x-bosses[0].x,soldier.y-bosses[0].y)<math.hypot(nearest_soldier.x-bosses[0].x,nearest_soldier.y-bosses[0].y):
+                    if math.hypot(soldier.x-mantis.x,soldier.y-mantis.y)<math.hypot(nearest_soldier.x-mantis.x,nearest_soldier.y-mantis.y):
                         nearest_soldier=soldier
             if nearest_soldier!=None:
-                bosses[0].target_x=nearest_soldier.x
-                bosses[0].target_y=nearest_soldier.y
-                if bosses[0].rect.colliderect(nearest_soldier.rect):
-                    bosses[0].attack_timer+=dt
-                    if bosses[0].attack_timer>=bosses[0].attack_speed:
-                        nearest_soldier.hp-=bosses[0].dmg
+                mantis.target_x=nearest_soldier.x
+                mantis.target_y=nearest_soldier.y
+                if mantis.rect.colliderect(nearest_soldier.rect):
+                    mantis.attack_timer+=dt
+                    if mantis.attack_timer>=mantis.attack_speed:
+                        nearest_soldier.hp-=mantis.dmg
                         if nearest_soldier.hp<=0:
                             soldiers.remove(nearest_soldier)
-                        bosses[0].attack_timer=0
+                        mantis.attack_timer=0
 
 
 
@@ -301,7 +336,7 @@ while running:
             food.draw(screen)
         player.draw(screen)
         if player.carrying!=None:
-            pygame.draw.rect(screen,player.carrying.color,(player.x,player.y-25,50,50))
+            screen.blit(player.carrying.crumb,(player.x-15,player.y-15))
         draw_text(str(vitamin),basic_font,(0,0,0),1000,0)
         if player.is_moving==True:
             player.animation_timer+=dt
@@ -309,12 +344,16 @@ while running:
                 player.animation_timer=0
                 player.frame_index+=1
                 player.img=player.images[player.frame_index%len(player.images)]
+        pygame.draw.rect(screen,(255,200,0),timeline)
+        for i in range(0,1201,200):
+            pygame.draw.rect(screen,(255,255,0),(pygame.Rect(150+i,50,50,50)))
+        pygame.draw.rect(screen,(255,0,0),(pygame.Rect(150+day%7*200,50,50,50)))
+
     if stage=='combat':
         screen.fill((255, 255, 255))
-        for boss in bosses:
-            boss.draw(screen)
-            boss.hbupdate()
-            boss.hb(screen)
+        mantis.draw(screen)
+        mantis.hbupdate()
+        mantis.hb(screen)
         for soldier in soldiers:
             soldier.draw(screen)
             soldier.hbupdate()
