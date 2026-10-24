@@ -245,17 +245,19 @@ while running:
             vitamin+=1
     if stage=='combat':
         ant_spawn_timer-=dt
-        if ant_spawn_timer<0:
-            ant_spawn_timer=1
-            soldiers.append(SoldierAnt(0,0,'black'))
+        if bosses:    
+            if ant_spawn_timer<0:
+                ant_spawn_timer=1
+                soldiers.append(SoldierAnt(0,0,'black'))
         mantis.move_towards(dt)
         for soldier in soldiers:
             soldier.move_towards(dt)
         mantis.update()
         for soldier in soldiers:
-            soldier.target_x=mantis.x
-            soldier.target_y=mantis.y
-            soldier.update()
+            if not soldier.rect.colliderect(mantis.rect):
+                soldier.target_x=mantis.x+random.uniform(-255,255)
+                soldier.target_y=mantis.y+random.uniform(-150,150)
+                soldier.update()
             if mantis.rect.colliderect(soldier.rect):
                 soldier.attack_timer+=dt
                 if soldier.attack_timer>=soldier.attack_speed:
