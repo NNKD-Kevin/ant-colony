@@ -38,19 +38,18 @@ class WorkerAnt:
         self.is_moving=False
         self.carrying=None
         images_path='assets/carpenter-ant'
-        self.images=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (24*2,19*2)),-90) for f in os.listdir(images_path) if f.endswith(".png")]  
-        self.img=pygame.image.load(self.img).convert_alpha()
-        self.img=pygame.transform.scale(self.img,(24*2,19*2))
-        self.rect=pygame.Rect(x-24,y-19,24*2,19*2)
+        self.images=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (19*2,24*2)),-90) for f in os.listdir(images_path) if f.endswith(".png")]  
+
+        self.rect=pygame.Rect(x-19,y-24,19*2,24*2)
         self.animation_timer=0
         self.animation_speed=0.02
         self.frame_index=0
         self.angle=0.0
         self.img=self.images[self.frame_index]
     def draw(self,screen):
-        screen.blit(self.img, (self.x-24, self.y-19))
+        screen.blit(self.img, (self.x-19, self.y-24))
     def update(self):
-        self.rect=pygame.Rect(self.x-24,self.y-19,24*2,19*2)
+        self.rect=pygame.Rect(self.x-19,self.y-24,19*2,24*2)
     def move_towards(self,dt):
         dx=self.target_x-self.x
         self.direction='right' if dx>0 else 'left'
@@ -97,11 +96,14 @@ class Food:
             images_path='assets/food/dead-mosquito'
             self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (59*2, 42*2)) for f in os.listdir(images_path) if f.endswith(".png")]
             self.crumb=pygame.transform.scale(pygame.image.load('assets/food/dead-mosquito-crumb.png').convert_alpha(), (5*6,5*6))
+            self.rect=pygame.Rect(x,y,59*2,42*2)
         self.img=self.images[self.count]
+        self.width=self.rect.width
+        self.height=self.rect.height
     def draw(self,screen):
-        screen.blit(self.img, (self.x-16*8, self.y-10*8))
+        screen.blit(self.img, (self.x-0.5*self.width, self.y-0.5*self.height))
     def update(self):
-        self.rect=pygame.Rect(self.x,self.y,32*8,20*8)
+        self.rect=pygame.Rect(self.x-0.5*self.width,self.y-0.5*self.height,self.width,self.height)
 class Nest:
     def __init__(self,x,y):
         self.x=x
@@ -118,17 +120,17 @@ class SoldierAnt:
         self.target_x=x
         self.target_y=y
         images_path='assets/carpenter-ant'
-        self.images=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (24*2,19*2)),-90) for f in os.listdir(images_path) if f.endswith(".png")]   
+        self.images=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (19*2,24*2)),-90) for f in os.listdir(images_path) if f.endswith(".png")]   
         self.angle=0.0
         self.img=self.images[0]
         self.animation_timer=0
         self.animation_speed=0.02
         self.frame_index=0
-        self.rect=pygame.Rect(x-24,y-19,24*2,19*2)
+        self.rect=pygame.Rect(x-19,y-24,19*2,24*2)
         self.speed=200
         self.type=type
         self.is_moving=False
-        self.healthbar=pygame.Rect(x-24,y-30,48,5)
+        self.healthbar=pygame.Rect(x-19,y-30,38,5)
         if self.type=='black':
             self.hp=10
             self.maxhp=10
@@ -144,13 +146,13 @@ class SoldierAnt:
             self.range=50
             self.attack_speed=1
             self.attack_timer=0
-        self.rangerect=pygame.Rect(self.x-24-self.range/2,self.y-19-self.range/2,48+self.range,38+self.range)
+        self.rangerect=pygame.Rect(self.x-19-self.range/2,self.y-24-self.range/2,38+self.range,48+self.range)
     def draw(self,screen):
-        screen.blit(self.img, (self.x-24, self.y-19))
+        screen.blit(self.img, (self.x-19, self.y-24))
     def update(self):
-        self.rect=pygame.Rect(self.x-24,self.y-19,48,38)
+        self.rect=pygame.Rect(self.x-19,self.y-24,38,48)
     def updaterange(self):
-        self.rangerect=pygame.Rect(self.x-24-self.range/2,self.y-19-self.range/2,48+self.range,38+self.range)
+        self.rangerect=pygame.Rect(self.x-19-self.range/2,self.y-24-self.range/2,38+self.range,48+self.range)
     def move_towards(self,dt):
         dx=self.target_x-self.x
         self.direction='right' if dx>0 else 'left'
@@ -165,10 +167,10 @@ class SoldierAnt:
             self.is_moving=True
             self.x+=dx/distance*self.speed*dt
             self.y+=dy/distance*self.speed*dt
-        if self.x<24:
-            self.x=24           #chỉnh tùy size, tạm chx cần
-        if self.y<19:
-            self.y=19
+        if self.x<19:
+            self.x=19           #chỉnh tùy size, tạm chx cần
+        if self.y<24:
+            self.y=24
         target_angle=math.degrees(math.atan2(dy,dx))
         delta=(target_angle-self.angle+180)%360-180
         self.angle += max(-1, min(1, delta))
@@ -176,8 +178,8 @@ class SoldierAnt:
         frame=self.images[self.frame_index%len(self.images)]
         self.img=pygame.transform.rotate(frame, -self.angle)
     def hbupdate(self):
-        self.losthealthbar=pygame.Rect(self.x-24,self.y-30,48,5)
-        self.healthbar=pygame.Rect(self.x-24,self.y-30,48*self.hp/self.maxhp,5)
+        self.losthealthbar=pygame.Rect(self.x-19,self.y-30,38,5)
+        self.healthbar=pygame.Rect(self.x-19,self.y-30,38*self.hp/self.maxhp,5)
     def hb(self,sreen):
         pygame.draw.rect(screen,red,self.losthealthbar)
         pygame.draw.rect(screen,green,self.healthbar)
