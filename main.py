@@ -96,10 +96,14 @@ class SoldierAnt:
         self.y=y
         self.target_x=x
         self.target_y=y
-        self.img='assets/ant.png'
-        self.img=pygame.image.load(self.img).convert_alpha()
-        self.img=pygame.transform.scale(self.img,(75,50))
-        self.rect=pygame.Rect(x,y,75,50)
+        images_path='assets/carpenter-ant'
+        self.images=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (19*2,24*2)),-90) for f in os.listdir(images_path) if f.endswith(".png")]   
+        self.angle=0.0
+        self.img=self.images[0]
+        self.animation_timer=0
+        self.animation_speed=0.02
+        self.frame_index=0
+        self.rect=pygame.Rect(x,y,19*2,24*2)
         self.speed=200
         self.type=type
         self.is_moving=False
@@ -116,6 +120,7 @@ class SoldierAnt:
         self.rect=pygame.Rect(self.x,self.y,75,50)
     def move_towards(self,dt):
         dx=self.target_x-self.x
+        self.direction='right' if dx>0 else 'left'
         dy=self.target_y-self.y
         distance=math.hypot(dx,dy)
         if distance<=self.speed*dt:
@@ -127,6 +132,12 @@ class SoldierAnt:
             self.is_moving=True
             self.x+=dx/distance*self.speed*dt
             self.y+=dy/distance*self.speed*dt
+        target_angle=math.degrees(math.atan2(dy,dx))
+        delta=(target_angle-self.angle+180)%360-180
+        self.angle += max(-3, min(3, delta))
+        self.angle%=360
+        frame=self.images[self.frame_index%len(self.images)]
+        self.img=pygame.transform.rotate(frame, -self.angle)
     def hbupdate(self):
         self.losthealthbar=pygame.Rect(self.x-37.5,self.y-50-50,75,5)
         self.healthbar=pygame.Rect(self.x-37.5,self.y-50-50,75*self.hp/10,5)
@@ -181,7 +192,7 @@ class Enemy:
 #Collecting Stage
 player=WorkerAnt(0,400)
 foods=[]
-nest=Nest(0,0)
+nest=Nest(100,50)
 food_spawn_timer=0
 vitamin=0
 running=True
@@ -283,7 +294,6 @@ while running:
     #RENDER HANDLING
     if stage=='collecting':
         screen.blit(farmground,(0,0))
-        nest.draw(screen)
         for food in foods:
             food.draw(screen)
         player.draw(screen)
