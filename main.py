@@ -154,7 +154,6 @@ class SoldierAnt:
             self.maxhp=5
             self.range=500
             self.dmg=0
-            self.range=50
             self.attack_speed=1
             self.attack_timer=0
         self.rangerect=pygame.Rect(self.x-19-self.range/2,self.y-24-self.range/2,38+self.range,48+self.range)
@@ -217,19 +216,27 @@ class Enemy:
         self.target_y=y
         if type=='mantis':
             walking_path='assets/mantis-walking'
-            self.images=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{walking_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(walking_path) if f.endswith(".png")]
+            attack1_path='assets/mantis-attack-1'
+            self.walks=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{walking_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(walking_path) if f.endswith(".png")]
+            self.attacks1=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attack1_path}/{f}").convert_alpha(), (34*10,74*10)),-90) for f in os.listdir(attack1_path) if f.endswith(".png")]
             self.rect=pygame.Rect(x-225,y-150,450,300)
             self.speed=100
-            self.hp=250
-            self.maxhp=250
-            self.dmg=3
+            self.hp=500
+            self.maxhp=500
+            self.dmg=5
             self.range=100
             self.attack_speed=1
             self.attack_timer=0
             self.animation_timer=0
             self.animation_speed=0.1
+            self.attack_animation_speed=0.05
+            self.attack_animation_timer=0
+            self.attack_duration=0.6
+            self.attack_hit=False
+            self.attack_target=None
+            self.attack_timer=0
             self.frame_index=0
-            self.img=self.images[self.frame_index]
+            self.img=self.walks[self.frame_index]
         elif type=='grasshopper':
             self.img='assets/grasshopper.jpg'
             self.img=pygame.image.load(self.img).convert_alpha()
@@ -245,6 +252,7 @@ class Enemy:
 
         self.angle=0.0
         self.is_moving=False
+        self.is_attacking=False
         self.healthbar=pygame.Rect(x,y-50-150,450,5)
         self.losthealthbar=pygame.Rect(x,y-50-150,450,5)            
     def draw(self,screen):
@@ -272,7 +280,7 @@ class Enemy:
         delta=(target_angle-self.angle+180)%360-180
         self.angle += max(-1, min(1, delta))
         self.angle%=360
-        frame=self.images[self.frame_index%len(self.images)]
+        frame=self.walks[self.frame_index%len(self.walks)]
         self.img=pygame.transform.rotate(frame, -self.angle)
     def hbupdate(self):
         self.losthealthbar=pygame.Rect(250,0,1000,30)
@@ -303,6 +311,7 @@ bosses=[mantis]
 soldiers=[]
 ant_spawn_timer=0
 acids=[]
+choosecombat=False
 
 #Game Loop
 while running:
@@ -370,7 +379,10 @@ while running:
                 ant_spawn_timer=0.5
                 soldiers.append(SoldierAnt(1500,850,'black'))
                 soldiers.append(SoldierAnt(1500,850,'wood'))
-            bosses[0].move_towards(dt)
+            if not bosses[0].is_attacking:
+                bosses[0].move_towards(dt)
+            else:
+                bosses[0].is_moving=False
             for soldier in soldiers:
                 soldier.move_towards(dt)
                 soldier.update()
@@ -395,16 +407,18 @@ while running:
                             dx=bosses[0].x-soldier.x
                             acids.append(Acid(soldier.x,soldier.y,math.degrees(math.atan2(dy,dx))))
                             soldier.attack_timer=0
-        if bosses[0].hp<=0:
+        if bosses and bosses[0].hp<=0:
             try:
                 bosses.remove(bosses[0])
             except ValueError:
                 pass
-            if stage='combat':
+            if stage=='combat':
                 stage='combat2'
                 choosecombat=True
-        for acid in acids:
+        for acid in acids[:]:
             acid.update()
+            if not bosses:
+                break
             if acid.rect.colliderect(bosses[0].rect):
                 bosses[0].hp-=acid.dmg
                 acids.remove(acid)
@@ -413,31 +427,47 @@ while running:
                     bosses.remove(bosses[0])
                 except ValueError:
                     pass
-                if stage='combat':
+                if stage=='combat':
                     stage='combat2'
                     choosecombat=True
         if bosses:
-            bosses[0].update()
-            nearest_soldier=None
-            bosses[0].attack_timer+=dt
-            for soldier in soldiers:
-                if nearest_soldier==None:
-                    nearest_soldier=soldier
-                else:
-                    if math.hypot(soldier.x-bosses[0].x,soldier.y-bosses[0].y)<math.hypot(nearest_soldier.x-bosses[0].x,nearest_soldier.y-bosses[0].y):
-                        nearest_soldier=soldier
-                    else:
-                        if math.hypot(soldier.x-bosses[0].x,soldier.y-bosses[0].y)<math.hypot(nearest_soldier.x-bosses[0].x,nearest_soldier.y-bosses[0].y):
-                            nearest_soldier=soldier
-                if nearest_soldier!=None:
-                    bosses[0].target_x=nearest_soldier.x
-                    bosses[0].target_y=nearest_soldier.y
-                    if bosses[0].rect.colliderect(nearest_soldier.rect):
-                        if bosses[0].attack_timer>=bosses[0].attack_speed:
-                            nearest_soldier.hp-=bosses[0].dmg
-                            if nearest_soldier.hp<=0:
-                                soldiers.remove(nearest_soldier)
-                            bosses[0].attack_timer=0
+            boss=bosses[0]
+            for s in soldiers[:]:
+                if s.hp<=0:
+                    soldiers.remove(s)       #Clear dead soldiers first
+            nearest_soldier=min(soldiers,key=lambda s:math.hypot(s.x-bosses[0].x,s.y-bosses[0].y),default=None)
+            
+                
+            if nearest_soldier:
+                bosses[0].target_x=nearest_soldier.x
+                bosses[0].target_y=nearest_soldier.y
+            if boss.is_attacking:
+                boss.is_moving=False
+                boss.attack_animation_timer+=dt
+                if not boss.attack_hit and boss.attack_animation_timer>=boss.attack_animation_speed:
+                    boss.attack_hit=True
+                    target=boss.attack_target
+                    if target is not None and target in soldiers:
+                        target.hp-=boss.dmg
+                        if target.hp <=0:
+                            soldiers.remove(target)
+                if boss.attack_animation_timer>=boss.attack_duration:
+                    boss.is_attacking=False
+                    boss.attack_timer=boss.attack_speed
+                    boss.frame_index=0                                  #Reset back to walking after hitting
+                    boss.attack_target=None
+
+            else:
+                boss.attack_timer=max(0.0,boss.attack_timer-dt)     #Only counts when not attacking
+
+                #Start a new attack
+                if nearest_soldier and boss.attack_timer==0 and boss.rect.colliderect(nearest_soldier.rect):
+                    boss.attack_target=nearest_soldier
+                    boss.is_attacking=True
+                    boss.attack_hit=False
+                    boss.attack_animation_timer=0
+
+
 
 
 
@@ -479,13 +509,22 @@ while running:
         screen.blit(battleground,(0,0))
         
         for boss in bosses:
-            if boss.is_moving==True:
-                boss.animation_timer+=dt
-                if boss.animation_timer>boss.animation_speed:
-                    boss.animation_timer=0
-                    boss.frame_index+=1
-                    boss.img=pygame.transform.rotate(boss.images[boss.frame_index%len(boss.images)], -boss.angle)
+            walks=getattr(boss,'walks',[])
+            attacks1=getattr(boss,'attacks1',[])
+            if boss.is_attacking and attacks1:
+                progress=boss.attack_animation_timer/boss.attack_duration   #Boss attack animation
+                index=min(int(progress*len(attacks1)),len(attacks1)-1)
+                boss.img=pygame.transform.rotate(attacks1[index], -boss.angle)
+            elif walks:
+            #Boss walking animation 
+                if boss.is_moving:
+                    boss.animation_timer+=dt
+                    if boss.animation_timer>boss.animation_speed:
+                        boss.animation_timer=0
+                        boss.frame_index+=1
+                        boss.img=pygame.transform.rotate(boss.walks[boss.frame_index%len(boss.walks)], -boss.angle)
             boss.draw(screen)
+            pygame.draw.rect(screen,(0,255,0),boss.rect,width=5)
             boss.hbupdate()
             boss.hb(screen)
         for soldier in soldiers:
