@@ -465,7 +465,10 @@ class Enemy:
         self.healthbar=pygame.Rect(x,y-50-150,450,5)
         self.losthealthbar=pygame.Rect(x,y-50-150,450,5)            
     def draw(self,screen):
-        screen.blit(self.img, (self.x-225, self.y-150))
+        if self.type=='mantis':
+            screen.blit(self.img, (self.x-225, self.y-150))
+        else:
+            screen.blit(self.img, (self.x-225, self.y-50))
     def update(self):
         self.rect=pygame.Rect(self.x-34*5,self.y,350,250)
     def move_towards(self,dt):
