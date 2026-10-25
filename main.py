@@ -9,7 +9,8 @@ screen = pygame.display.set_mode((1500, 850))
 pygame.display.set_caption("Ant Colony")
 stage='nest'
 clock=pygame.time.Clock()
-
+cursor_img=pygame.image.load('assets/carpenter-ant/pixil-frame-0.png').convert_alpha()
+cursor_img=pygame.transform.rotate(pygame.transform.scale(cursor_img,(19,24)),45)
 button_font=pygame.font.Font('assets/font.ttf', 40)
 ui_font=pygame.font.Font('assets/font.ttf', 70)
 farmground=pygame.image.load('assets/farmground.png').convert()
@@ -32,6 +33,7 @@ green=(0,255,0)
 red=(255,0,0)
 grey=(127,127,127)
 black=(0,0,0)
+
 
 
 
@@ -68,10 +70,34 @@ class Button:
                 screen.blit(text_surface, text_rect)
                 pygame.draw.rect(screen,button.border_color,button.rect,width=2)
 class ReturnButton:
-    def __init__(self, x, y, location):
+    def __init__(self, x, y):
         self.x=x
         self.y=y
-
+        self.passive_img=pygame.image.load('assets/return-button.png').convert_alpha()
+        self.active_img=pygame.image.load('assets/return-button-active.png').convert_alpha()
+        self.passive_img=pygame.transform.scale(self.passive_img,(100,100))
+        self.active_img=pygame.transform.scale(self.active_img,(100,100))
+        self.img=self.passive_img
+        self.rect=pygame.Rect(x,y,100,100)
+    def draw(self,screen):
+        screen.blit(self.img,(self.x,self.y))
+        self.rect=pygame.Rect(self.x,self.y,100,100)
+class HatchButton:
+    def __init__(self, x, y,type):
+        self.x=x
+        self.y=y
+        self.type=type
+        self.rect=pygame.Rect(x,y,250,50)
+        self.active_color=(155,155,100)
+        self.passive_color=(255,255,200)
+        self.color=self.passive_color
+        self.border_color=(0,0,0)
+    def draw(self,screen):
+        pygame.draw.rect(screen,self.color,self.rect)
+        pygame.draw.rect(screen,self.border_color,self.rect,width=2)
+        text_surface= button_font.render(self.type, True, (0, 0, 0))
+        text_rect = text_surface.get_rect(center=self.rect.center)
+        screen.blit(text_surface, text_rect)
 #Collecting Stage
 class WorkerAnt:
     def __init__(self,x,y):
@@ -381,12 +407,27 @@ class Slash:
         
 #Nest Stage        
 timeline=pygame.Rect(150,50,1200,30)
-buttons=[Button(1200,150,'collection'),Button(300,700,'hatch'),Button(200,350,'storage'),Button(1000,750,'sleep')]
+buttons=[Button(950,150,'collection'),Button(400,580,'hatch'),Button(400,280,'storage'),Button(1000,600,'sleep')]
+hatch_buttons=[HatchButton(200,550,'worker'),HatchButton(600,550,'soldier'),HatchButton(1000,550,'scout')]
+hatching=False
+storaging=False
 transition=False
 transition_speed=100
 menu_on=False
 ant_price=5
-menu=pygame.Rect(250,100,1000,600)
+menu=pygame.Rect(150,200,1200,600)
+return_button_nest=ReturnButton(1220,220)
+
+#Storage
+blood_clot=0
+wheat=0
+apple_seed=0
+salt=0
+honey=0
+leaf=0
+
+
+
 #Collecting Stage
 max_foods=2
 week=1
@@ -438,7 +479,7 @@ while running:
         mouse_pos=pygame.mouse.get_pos()
         if stage=='nest':
             for button in buttons:
-                if button.rect.collidepoint(mouse_pos):
+                if button.rect.collidepoint(mouse_pos) and menu_on==False:
                     button.color=button.active_color
                     button.border_color=(255,255,255)
                     if event.type==pygame.MOUSEBUTTONDOWN:
@@ -452,15 +493,46 @@ while running:
                             collected=False
                             transition=True
                             darkness=255
+                        if button.function=='storage' and not menu_on:
+                            menu_on=True
+                            storaging=True
+                        if button.function=='hatch' and not menu_on:
+                            menu_on=True
+                            hatching=True
                 else:
                     button.color=button.passive_color
                     button.border_color=(0,0,0)
-
-
+            if menu_on:
+                if event.type==pygame.MOUSEBUTTONDOWN:
+                    if not menu.collidepoint(mouse_pos):
+                        menu_on=False
+                        storaging=False
+                        hatching=False
+                if return_button_nest.rect.collidepoint(mouse_pos):
+                    return_button_nest.img=return_button_nest.active_img
+                    if event.type==pygame.MOUSEBUTTONDOWN:
+                        menu_on=False
+                        storaging=False
+                        hatching=False
+                else:
+                    return_button_nest.img=return_button_nest.passive_img
+                if hatching:
+                    for button in hatch_buttons:
+                        if button.rect.collidepoint(mouse_pos):
+                            button.color=button.active_color
+                            button.border_color=(255,255,255)
+                            if event.type==pygame.MOUSEBUTTONDOWN:
+                                pass
+                        else:
+                            button.color=button.passive_color
+                            button.border_color=(0,0,0)
 
     #LOGIC HANDLING
     if stage=='nest':
         pass
+        if day==6:
+                    choosecombat=True
+                    stage='combat'
 
 
 
@@ -477,17 +549,24 @@ while running:
                     food.count+=1
                     food.img=food.images[food.count]
                     player.carrying=food
+                
         if player.rect.colliderect(nest.rect) and player.carrying:
+            if player.carrying.count==5:
+                if player.carrying.name=='mosquito': blood_clot+=1
+                if player.carrying.name=='bread':wheat+=1
+                if player.carrying.name=='apple':apple_seed+=1
+                if player.carrying.name=='chips':salt+=1
+                if player.carrying.name=='honeycomb':honey+=1
+                if player.carrying.name=='leaf':leaf+=1
             player.carrying=None
             calories+=2
             stamina-=1
+
             if stamina<=0:
                 stage='nest'
                 collected=True
                 food=[]
-        if day==6:
-            choosecombat=True
-            stage='combat'
+        
     if stage=='combat' or stage=='combat2':
         if choosecombat:
             if stage=='combat':
@@ -647,11 +726,6 @@ while running:
                                            
                     
                 
-            
-            
-
-
-
 
 
 
@@ -661,20 +735,38 @@ while running:
 
     #RENDER HANDLING
     if stage=='nest':
+        pygame.mouse.set_visible(False)
         screen.blit(nest_background,(0,0))
         pygame.draw.rect(screen,(255,200,0),timeline)
         for i in range(0,1201,200):
             pygame.draw.rect(screen,(255,255,0),(pygame.Rect(150+i,50,50,50)))
         pygame.draw.rect(screen,(255,0,0),(pygame.Rect(150+day%7*200,50,50,50)))
+        draw_text(f'Day {day+1}',button_font,(0,0,0),150,5)
         for button in buttons:
             button.draw(screen)
         pygame.draw.rect(screen,(240,219,211),(50,120,220,120))
         pygame.draw.rect(screen,(0,0,0),(50,120,220,120),width=5)
         screen.blit(food_icon,(60,130))
         draw_text(str(calories),ui_font,(0,0,0),170,130)
+        
+        screen.blit(black_screen,(0,0))
+        if menu_on:
+            pygame.draw.rect(screen,(235,219,200),menu)
+            pygame.draw.rect(screen,(0,0,0),menu,width=3)
+            return_button_nest.draw(screen)
+            pygame.draw.rect(screen,(240,219,211),(50,120,220,120))
+            pygame.draw.rect(screen,(0,0,0),(50,120,220,120),width=5)
+            if hatching:
+                for button in hatch_buttons:
+                    button.draw(screen)
+            screen.blit(food_icon,(60,130))
+            draw_text(str(calories),ui_font,(0,0,0),170,130)
+        mouse_x,mouse_y=pygame.mouse.get_pos()
+        screen.blit(cursor_img,(mouse_x,mouse_y))
 
 
     if stage=='collecting':
+        pygame.mouse.set_visible(True)
         screen.blit(farmground,(0,0))
         for food in foods:
             food.draw(screen)
@@ -692,9 +784,12 @@ while running:
         pygame.draw.rect(screen,(0,0,0),(1250,20,220,120),width=5)
         screen.blit(stamina_icon,(1260,30))
         draw_text(str(stamina),ui_font,(0,0,0),1370,30)
+        
+        screen.blit(black_screen,(0,0))
 
 
     if stage=='combat'or stage=='combat2':
+        pygame.mouse.set_visible(True)
         screen.blit(battleground,(0,0))
         
         for boss in bosses:
@@ -715,7 +810,7 @@ while running:
                             boss.img=pygame.transform.rotate(boss.walks[boss.frame_index%len(boss.walks)], -boss.angle)
             boss.draw(screen)
             boss.hbupdate()
-            boss.hb(screen)
+            boss.hb()
             pygame.draw.rect(screen,(0,255,0),boss.rect,2)
         for soldier in soldiers:
             if soldier.is_moving==True:
@@ -732,22 +827,23 @@ while running:
             acid.draw(screen)
             acid.update()
             acid.move(dt)
+        for slash in slashes:
+            slash.draw()
+        screen.blit(black_screen,(0,0))
     #Global Rendering
     black_screen.fill((0,0,0,darkness))
-    screen.blit(black_screen,(0,0))
-    if transition==True:
+    if menu_on:
+        darkness=125
+    elif transition:
         darkness-=transition_speed*dt
         if darkness<0:
             darkness=0
             transition=False
-    if menu_on:
-        darkness=125
     else:
         darkness=0
 
 
-        for slash in slashes:
-            slash.draw()
+        
     pygame.display.update()
 
 
