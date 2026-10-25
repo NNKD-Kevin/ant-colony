@@ -33,7 +33,8 @@ stamina_icon=pygame.image.load('assets/stamina-icon.png').convert_alpha()
 stamina_icon=pygame.transform.scale(stamina_icon,(100,100))
 
 
-
+power_buff=0
+hp_buff=0
 black_screen=pygame.Surface((1500,850),pygame.SRCALPHA)
 darkness=0
 
@@ -330,6 +331,8 @@ class SoldierAnt:
             self.attack_speed=1
             self.attack_timer=0    
         self.rangerect=pygame.Rect(self.x-19-self.range/2,self.y-24-self.range/2,38+self.range,48+self.range)
+        self.random_x=random.randint(200,1300)
+        self.random_y=random.randint(300,600)
     def draw(self,screen):
         screen.blit(self.img, (self.x-19, self.y-24))
     def update(self):
@@ -522,6 +525,7 @@ leaf=0
 timeline=pygame.Rect(150,50,1200,30)
 buttons=[Button(950,150,'collection'),Button(400,580,'hatch'),Button(400,280,'storage'),Button(1000,600,'sleep')]
 hatch_buttons=[HatchButton(200,450,'worker ant'),HatchButton(600,450,'soldier ant'),HatchButton(1000,450,'scout ant'),HatchButton(600,515,'leafcutter ant'),HatchButton(600,580,'wood ant'),HatchButton(600,645,'fire ant'),HatchButton(600,710,'dracula ant')]
+barrack_buttons=[HatchButton(400,250,'wheat'),HatchButton(700,250,'salt')]
 hatching=False
 storaging=False
 transition=False
@@ -534,7 +538,7 @@ info_icons=[InfoButton(350,220,'worker'),InfoButton(750,220,'soldier'),InfoButto
 cocoons=[Cocoon(280,250,1),Cocoon(680,250,2),Cocoon(1080,250,3)]
 notifications=[]
 hatch_icons=[Icon(300,150,'leaf',leaf),Icon(400,150,'honey',honey),Icon(500,150,'seed',apple_seed),Icon(600,150,'blood',blood)]
-barrack_icons=[Icon(500,150,'wheat',blood),Icon(600,150,'salt',blood)]
+barrack_icons=[Icon(500,150,'wheat',wheat),Icon(600,150,'salt',salt)]
 #Storage
 
 
@@ -558,7 +562,7 @@ running=True
 mantis=Enemy(0,0,'mantis')
 grasshopper=Enemy(1000,400,'grasshopper')
 bosses=[mantis]
-soldiers=[]
+soldiers=[SoldierAnt(1500,800,'black',hp_buff,power_buff)]
 ant_spawn_timer=0
 acids=[]
 choosecombat=False
@@ -573,17 +577,17 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
+        keys=pygame.key.get_pressed()
         if stage=='start':
-            keys=pygame.key.get_pressed()
             if keys[pygame.K_SPACE]:
-                stage='collecting'            
+                stage='nest'
+                transition=True
+                darkness=255
         if stage=='collecting':
             if event.type==pygame.MOUSEBUTTONDOWN:
                 for worker in workers:
                     worker.target_x=event.pos[0]+random.randint(-30,30)
                     worker.target_y=event.pos[1]+random.randint(-30,30)
-        keys=pygame.key.get_pressed()
         if keys[pygame.K_1]:
             stage='collecting'
         if keys[pygame.K_2]:
@@ -648,28 +652,43 @@ while running:
                                 if button.type=='scout ant' and calories>=5:
                                     calories-=5
                                     max_foods+=1
-                                if button.type=='soldier ant' and calories>=5:
-                                    calories-=5
-                                    soldiers.append(SoldierAnt(1500,850,'black',wheat,salt))
-                                if button.type=='leafcutter ant' and calories>=5 and leaf>0:
-                                    calories-=5
+                                if button.type=='soldier ant' and calories>=2:
+                                    calories-=2
+                                    soldiers.append(SoldierAnt(1500,850,'black',hp_buff,power_buff))
+                                if button.type=='leafcutter ant' and calories>=2 and leaf>0:
+                                    calories-=2
                                     leaf-=1
-                                    soldiers.append(SoldierAnt(1500,850,'leafcutter',wheat,salt))
-                                if button.type=='wood ant' and calories>=5 and honey>0:
-                                    calories-=5
+                                    soldiers.append(SoldierAnt(1500,850,'leafcutter',hp_buff,power_buff))
+                                if button.type=='wood ant' and calories>=2 and honey>0:
+                                    calories-=2
                                     honey-=1
-                                    soldiers.append(SoldierAnt(1500,850,'wood',wheat,salt))
-                                if button.type=='fire ant' and calories>=5 and apple_seed>0:
-                                    calories-=5
+                                    soldiers.append(SoldierAnt(1500,850,'wood',hp_buff,power_buff))
+                                if button.type=='fire ant' and calories>=2 and apple_seed>0:
+                                    calories-=2
                                     apple_seed-=1
-                                    soldiers.append(SoldierAnt(1500,850,'fireant',wheat,salt))
-                                if button.type=='dracula ant' and calories>=5 and blood>0:
+                                    soldiers.append(SoldierAnt(1500,850,'fireant',hp_buff,power_buff))
+                                if button.type=='dracula ant' and calories>=2 and blood>0:
                                     blood-=1
-                                    calories-=5
-                                    soldiers.append(SoldierAnt(1500,850,'dracula',wheat,salt))
+                                    calories-=2
+                                    soldiers.append(SoldierAnt(1500,850,'dracula',hp_buff,power_buff))
                         else:
                             button.color=button.passive_color
                             button.border_color=(0,0,0)
+                if storaging:
+                    for button in barrack_buttons:
+                        if button.collidepoint(mouse_pos):
+                            button.border_color=(255,255,255)
+                            button.color=button.active_color
+                            if event.type==pygame.MOUSEBUTTONDOWN:
+                                if button.type=='wheat' and wheat>0:
+                                    wheat-=1
+                                    hp_buff+=1
+                                if button.type=='salt' and salt>0:
+                                    salt-=1
+                                    power_buff+=1
+                        else:
+                            button.border_color=(0,0,0)
+                            button.color=button.passive_color
                     for icon in info_icons:
                         if icon.rect.collidepoint(mouse_pos):
                             icon.hovered=True
@@ -918,7 +937,6 @@ while running:
         text_rect=text_surf1.get_rect(center=(950, 600))
         screen.blit(text_surf1,text_rect)
     if stage=='nest':
-        pygame.mouse.set_visible(False)
         screen.blit(nest_background,(0,0))
         pygame.draw.rect(screen,(255,200,0),timeline)
         for i in range(0,1201,200):
@@ -964,14 +982,15 @@ while running:
                 for icon in barrack_icons:
                     icon.update(leaf,honey,apple_seed,blood,wheat,salt)
                     icon.draw(screen)
+                for button in barrack_buttons:
+                    button.draw(screen)
+                for soldier in soldiers:
+                    screen.blit(soldier.img,(soldier.random_x,soldier.random_y))
             screen.blit(food_icon,(60,130))
             draw_text(str(calories),ui_font,(0,0,0),170,130)
-        mouse_x,mouse_y=pygame.mouse.get_pos()
-        screen.blit(cursor_img,(mouse_x,mouse_y))
 
 
     if stage=='collecting':
-        pygame.mouse.set_visible(True)
         screen.blit(farmground,(0,0))
         for food in foods:
             food.draw(screen)
@@ -995,7 +1014,6 @@ while running:
 
 
     if stage=='combat'or stage=='combat2':
-        pygame.mouse.set_visible(True)
         screen.blit(battleground,(0,0))
         
         for boss in bosses:
@@ -1035,6 +1053,11 @@ while running:
             acid.move(dt)
     #Global Rendering
     black_screen.fill((0,0,0,darkness))
+    
+    pygame.mouse.set_visible(False)
+    
+    mouse_x,mouse_y=pygame.mouse.get_pos()
+    screen.blit(cursor_img,(mouse_x,mouse_y))
     if menu_on:
         darkness=125
     elif transition:
