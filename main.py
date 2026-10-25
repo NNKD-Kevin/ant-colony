@@ -700,9 +700,13 @@ while running:
         if day==6:
             choosecombat=True
             stage='combat'
+            for soldier in soldiers:
+                soldier.x=random.randint(100,1400)
         if day==13:
             choosecombat=True
             stage='combat2'
+            for soldier in soldiers:
+                soldier.x=random.randint(100,1400)
 
 
 
@@ -780,25 +784,25 @@ while running:
                             if soldier.rect.colliderect(bosses[0].rect):
                                 soldier.target_x=bosses[0].x-255-random.uniform(0,soldier.range)
                                 soldier.target_y=bosses[0].y-255-random.uniform(0,soldier.range)
-                            soldier.attack_timer+=dt
                             if soldier.attack_timer>=soldier.attack_speed:
                                 dy=bosses[0].y-soldier.y
                                 dx=bosses[0].x-soldier.x
                                 acids.append(Acid(soldier.x,soldier.y,math.degrees(math.atan2(dy,dx)),soldier.dmg))
                                 soldier.attack_timer=0                            
                         else:
+                            soldier.attack_timer+=dt
                             if soldier.attack_timer>=soldier.attack_speed:
                                 soldier.attack_timer=0
-                                if soldier.type=='fire ant':
+                                if soldier.type=='fireant':
                                     if burn<100:
-                                        burn+=5
+                                        burn+=1
                                 bosses[0].hp-=soldier.dmg
                                 if soldier.type=='dracula':
-                                    if soldier.health<soldier.healthmax:
-                                        if soldier.health+soldier.dmg/2>soldier.healthmax:
-                                            soldier.health=soldier.healthmax
+                                    if soldier.hp<soldier.maxhp:
+                                        if soldier.hp+soldier.dmg/2>soldier.maxhp:
+                                            soldier.hp=soldier.maxhp
                                         else:
-                                            soldier.health+=soldier.dmg/2
+                                            soldier.hp+=soldier.dmg/2
         if burn>0:
             burn_timer+=dt
             if burn_timer>=burnspeed:
