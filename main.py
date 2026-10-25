@@ -276,21 +276,21 @@ class SoldierAnt:
             self.attack_speed=1
             self.attack_timer=0
         elif self.type=='dracula':
-            self.hp=5+hpbuff-dmgbuff
-            self.maxhp=5+hpbuff-dmgbuff
+            self.hp=10+hpbuff-dmgbuff
+            self.maxhp=10+hpbuff-dmgbuff
             self.range=200
             self.dmg=2+dmgbuff
             self.attack_speed=1
             self.attack_timer=0
         elif self.type=='fireant':
-            self.hp=5+hpbuff-dmgbuff
-            self.maxhp=5+hpbuff-dmgbuff
+            self.hp=15+hpbuff-dmgbuff
+            self.maxhp=15+hpbuff-dmgbuff
             self.range=200
             self.dmg=0+dmgbuff
             self.attack_speed=2
             self.attack_timer=0
         elif self.type=='leafcutter':
-            self.hp=5+hpbuff-dmgbuff
+            self.hp=15+hpbuff-dmgbuff
             self.maxhp=15+hpbuff-dmgbuff
             self.range=200
             self.dmg=2+dmgbuff
@@ -738,6 +738,8 @@ while running:
                     bosses[0].hp-=acid.dmg
                     acids.remove(acid)
                 if bosses[0].hp<=0:
+                    for soldier in soldiers:
+                        soldier.hp=soldier.maxhp
                     try:
                         bosses.remove(bosses[0])
                     except ValueError:
