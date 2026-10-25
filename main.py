@@ -13,14 +13,13 @@ def get_resource_path(relative_path):
     return os.path.join(base_path, relative_path)
 
 
-
 pygame.init()
 pygame.mixer.init()
 screen = pygame.display.set_mode((1500, 850))
 pygame.display.set_caption("Ant Colony")
 stage='start'
 clock=pygame.time.Clock()
-cursor_img=pygame.image.load('assets/worker-ant/pixil-frame-0.png').convert_alpha()
+cursor_img=pygame.image.load(get_resource_path('assets/worker-ant/pixil-frame-0.png')).convert_alpha()
 cursor_img=pygame.transform.rotate(pygame.transform.scale(cursor_img,(19,24)),45)
 button_font=pygame.font.Font('assets/font.ttf', 40)
 ui_font=pygame.font.Font('assets/font.ttf', 70)
@@ -594,9 +593,8 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
+        keys=pygame.key.get_pressed()
         if stage=='start' or stage=='return':
-            keys=pygame.key.get_pressed()
             if keys[pygame.K_SPACE]:
                 stage='nest'
                 transition=True
@@ -606,7 +604,6 @@ while running:
                 for worker in workers:
                     worker.target_x=event.pos[0]+random.randint(-20*len(workers),20*len(workers))
                     worker.target_y=event.pos[1]+random.randint(-20*len(workers),20*len(workers))
-        keys=pygame.key.get_pressed()
         if keys[pygame.K_1]:
             stage='collecting'
         if keys[pygame.K_2]:
@@ -711,6 +708,11 @@ while running:
                         else:
                             button.border_color=(0,0,0)
                             button.color=button.passive_color
+        if stage=='collecting':
+            if keys[pygame.K_h]:
+                stage='nest'
+                collected=True
+
                     
 
 
@@ -1105,7 +1107,7 @@ while running:
         pygame.draw.rect(screen,(0,0,0),(1250,20,220,120),width=5)
         screen.blit(stamina_icon,(1260,30))
         draw_text(str(math.ceil(stamina)),ui_font,(0,0,0),1370,30)
-        
+        draw_text('Click H to return if stuck',text_font,(0,0,0),1250,150)
         screen.blit(black_screen,(0,0))
 
 
