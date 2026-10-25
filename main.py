@@ -266,6 +266,7 @@ class Food:
         self.img=self.images[self.count]
         self.width=self.rect.width
         self.height=self.rect.height
+        self.is_carried=False
     def draw(self,screen):
         screen.blit(self.img, (self.x-0.5*self.width, self.y-0.5*self.height))
     def update(self):
@@ -490,10 +491,14 @@ class Enemy:
         if self.y<(200):
             self.y=200
         if self.x>(1500-200): 
-            self.x=1500-200     #chỉnh sau này tùy theo size boss
-        if self.y>(850-300):
-            self.y=850-300
+            self.x=1500-200
         if self.type=='mantis':
+            if self.y>850-500:
+                self.y=850-500
+        else:
+            if self.y>(850-200):
+                self.y=850-200
+        if self.type=='mantis'or self.type=='grasshopper':
             target_angle=math.degrees(math.atan2(dy,dx))
             delta=(target_angle-self.angle+180)%360-180
             self.angle += max(-1, min(1, delta))
@@ -724,25 +729,25 @@ while running:
             worker.update()
             for food in foods:
                 food.update()
-                if worker.rect.colliderect(food.rect) and worker.carrying==None:
-                    if food.count<5:
-                        food.count+=1
-                        food.img=food.images[food.count]
-                        worker.carrying=food
+                if worker.rect.colliderect(food.rect) and worker.carrying == None and not food.is_carried:
+                    if food.count < 5:
+                        food.count += 1
+                        food.img = food.images[food.count]
+                        worker.carrying = food
+                        food.is_carried = True
                 
             if worker.rect.colliderect(nest.rect) and worker.carrying:
-                if worker.carrying.count==5:
-                    if worker.carrying.type=='mosquito': blood+=1/len(workers)
-                    if worker.carrying.type=='bread':wheat+=1/len(workers)
-                    if worker.carrying.type=='apple':apple_seed+=1/len(workers)
-                    if worker.carrying.type=='chips':salt+=1/len(workers)
-                    if worker.carrying.type=='honeycomb':honey+=1/len(workers)
-                    if worker.carrying.type=='leaf':leaf+=1/len(workers)
-                    if worker.carrying in foods:
-                        foods.remove(worker.carrying)
                 worker.carrying=None
                 calories+=2
                 stamina-=1/len(workers)
+                gacha=random.randint(1,5)
+                if gacha==5:
+                    if worker.carrying.type=='mosquito': blood+=1
+                    if worker.carrying.type=='bread':wheat+=1
+                    if worker.carrying.type=='apple':apple_seed+=1
+                    if worker.carrying.type=='chips':salt+=1
+                    if worker.carrying.type=='honeycomb':honey+=1
+                    if worker.carrying.type=='leaf':leaf+=1
 
             if stamina<=0 or len(foods)<=0:
                 stage='nest'
@@ -812,7 +817,7 @@ while running:
                                             soldier.hp+=soldier.dmg/2
         if burn>0:
             burn_timer+=dt
-            if burn_timer>=burnspeed:
+            if burn_timer>=burnspeed and bosses:
                 bosses[0].hp-=1
                 burn_timer=0
                                        
