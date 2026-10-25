@@ -816,7 +816,7 @@ while running:
                         stage='nest'
                         for s in soldiers[:]:
                             s.hp=s.maxhp
-        if bosses and not skill:
+        if bosses[0]=='mantis':
             boss=bosses[0]
             for s in soldiers[:]:
                 if s.hp<=0:
@@ -842,13 +842,6 @@ while running:
                     boss.attack_timer=boss.attack_speed
                     boss.frame_index=0                                  #Reset back to walking after hitting
                     boss.attack_target=None
-                    boss.skill_activate+=1
-                    if boss.skill_activate>=boss.skill_duration:
-                        startslash=True
-                        skill=True
-                        furthestsoldier=False
-                        boss.skill_activate=0
-                        chooseskill=random.randint(1,2)
                     
                     
             else:
@@ -860,14 +853,52 @@ while running:
                     boss.is_attacking=True
                     boss.attack_hit=False
                     boss.attack_animation_timer=0
-        elif bosses and skill:              
-            boss=bosses[0]                      
-            for s in soldiers[:]:
-                if s.hp<=0:
-                    soldiers.remove(s)
-            if boss.type=='mantis':
-                skill=False
-            elif boss.type=='grasshopper':
+        elif bosses[0]=='grasshopper':              
+            nearest_soldier=min(soldiers,key=lambda s:math.hypot(s.x-bosses[0].x,s.y-bosses[0].y),default=None)
+            
+                
+            if nearest_soldier:
+                bosses[0].target_x=nearest_soldier.x
+                bosses[0].target_y=nearest_soldier.y
+            if boss.is_attacking:
+                boss.is_moving=False
+                boss.attack_animation_timer+=dt                    
+                if not boss.attack_hit and boss.attack_animation_timer>=boss.attack_animation_speed:
+                    boss.attack_hit=True
+                    target=boss.attack_target
+                    if target is not None and target in soldiers:
+                        if target.hp <=0:
+                            soldiers.remove(target)
+                    boss.skill_activate+=1
+                    if boss.skill_activate>=boss.skill_duration:
+                        startslash=True
+                        skill=True
+                        furthestsoldier=False
+                        boss.skill_activate=0
+                        chooseskill=random.randint(1,2)
+                            
+                if boss.attack_animation_timer>=boss.attack_duration:
+                    boss.is_attacking=False
+                    boss.attack_timer=boss.attack_speed
+                    boss.frame_index=0                                  #Reset back to walking after hitting
+                    boss.attack_target=None
+
+                    
+                    
+            else:
+                boss.attack_timer=max(0.0,boss.attack_timer-dt)     #Only counts when not attacking
+
+                #Start a new attack
+                if nearest_soldier and boss.attack_timer==0 and boss.rect.colliderect(nearest_soldier.rect):
+                    boss.attack_target=nearest_soldier
+                    boss.is_attacking=True
+                    boss.attack_hit=False
+                    boss.attack_animation_timer=0
+            if bosses and skill:
+                boss=bosses[0]                      
+                for s in soldiers[:]:
+                    if s.hp<=0:
+                        soldiers.remove(s)
                 if chooseskill==1:
                     if not furthestsoldier:
                         furthest_soldier=max(soldiers,key=lambda s:math.hypot(s.x-bosses[0].x,s.y-bosses[0].y),default=None)
