@@ -49,7 +49,7 @@ class Button:
         self.x=x
         self.y=y
         self.function=function
-        self.rect=pygame.Rect(x,y,200,100)
+        self.rect=pygame.Rect(x,y,210,100)
         self.active_color=(255,127,0)
         self.passive_color=(150,75,0)
         self.color=self.passive_color
@@ -60,7 +60,7 @@ class Button:
             if self.function=='hatch':
                 text='Hatch'
             if self.function=='storage':
-                text='Storage'
+                text='Barrack'
             if self.function=='sleep':
                 text='Sleep'
             text_surface= button_font.render(text, True, (255, 255, 255))
@@ -190,14 +190,12 @@ class Food:
         self.x=x
         self.y=y
         self.count=0
-        if gacha<40:
-            self.type='bread'
-        elif 40<=gacha<50:
-            self.type='chips'
-        elif gacha>=50 and gacha<91:
-            self.type='apple'
-        elif gacha>=91:
-            self.type='mosquito'
+        if gacha<5:self.type='chips'
+        elif 5<=gacha<20:self.type='apple'
+        elif 20<=gacha<35:self.type='honeycomb'
+        elif 35<=gacha<50:self.type='leaf'
+        elif 50<=gacha<65:self.type='mosquito'
+        elif 65<=gacha<100:self.type='bread'
         if self.type=='bread':
             images_path='assets/food/bread'
             self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (32*8, 20*8)) for f in os.listdir(images_path) if f.endswith(".png")]
@@ -218,6 +216,16 @@ class Food:
             self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (59*2, 42*2)) for f in os.listdir(images_path) if f.endswith(".png")]
             self.crumb=pygame.transform.scale(pygame.image.load('assets/food/dead-mosquito-crumb.png').convert_alpha(), (5*6,5*6))
             self.rect=pygame.Rect(x,y,59*2,42*2)
+        if self.type=='honeycomb':
+            images_path='assets/food/honeycomb'
+            self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (30*7, 31*7)) for f in os.listdir(images_path) if f.endswith(".png")]
+            self.rect=pygame.Rect(x,y,30*7,31*7)
+            self.crumb=pygame.transform.scale(pygame.image.load('assets/food/honey-crumb.png').convert_alpha(), (11*6,14*6))
+        if self.type=='leaf':
+            images_path='assets/food/leaf'
+            self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (23*15, 16*15)) for f in os.listdir(images_path) if f.endswith(".png")]
+            self.rect=pygame.Rect(x,y,23*10,16*10)
+            self.crumb=pygame.transform.scale(pygame.image.load('assets/food/leaf-crumb.png').convert_alpha(), (5*12,5*12))
         self.img=self.images[self.count]
         self.width=self.rect.width
         self.height=self.rect.height
@@ -460,6 +468,8 @@ menu=pygame.Rect(150,200,1200,600)
 return_button_nest=ReturnButton(1220,220)
 info_icons=[InfoButton(350,220,'worker'),InfoButton(750,220,'soldier'),InfoButton(1150,220,'scout')]
 cocoons=[Cocoon(280,250,1),Cocoon(680,250,2),Cocoon(1080,250,3)]
+notifications=[]
+
 #Storage
 blood_clot=0
 wheat=0
@@ -480,7 +490,7 @@ stamina=3
 slashes=[]
 foods=[]
 nest=Nest(100,50)
-player=WorkerAnt(100,50)
+workers=[WorkerAnt(100,50)]
 food_spawn_timer=0
 calories=0
 running=True
@@ -505,19 +515,18 @@ while running:
 
         if stage=='collecting':
             if event.type==pygame.MOUSEBUTTONDOWN:
-                player.target_x=event.pos[0]
-                player.target_y=event.pos[1]
+                for worker in workers:
+                    worker.target_x=event.pos[0]+random.randint(-30,30)
+                    worker.target_y=event.pos[1]+random.randint(-30,30)
         keys=pygame.key.get_pressed()
         if keys[pygame.K_1]:
             stage='collecting'
         if keys[pygame.K_2]:
             stage='combat'  
             choosecombat=True
-        if keys[pygame.K_0]:
-            day+=0.5
         if keys[pygame.K_3]:
             stage='combat2'
-            choosecombat=True  
+            choosecombat=True
         mouse_pos=pygame.mouse.get_pos()
 
         #Nest Stage
@@ -529,8 +538,10 @@ while running:
                     if event.type==pygame.MOUSEBUTTONDOWN:
                         if button.function=='collection' and collected==False:
                             stage='collecting'
+                            transition=True
+                            darkness=255
                             for i in range(max_foods):
-                                foods.append(Food(random.randint(400,1500),random.randint(100,850),random.randint(0,100)))
+                                foods.append(Food(random.randint(400,1300),random.randint(100,750),random.randint(0,100)))
                         if button.function=='sleep' and not transition:
                             day+=1
                             stamina=max_stamina
@@ -566,7 +577,12 @@ while running:
                             button.color=button.active_color
                             button.border_color=(255,255,255)
                             if event.type==pygame.MOUSEBUTTONDOWN:
-                                pass
+                                if button.type=='worker ant' and calories>=5:
+                                    calories-=5
+                                    workers.append(WorkerAnt(100,50))
+                                if button.type=='scout ant' and calories>=5:
+                                    calories-=5
+                                    max_foods+=1
                         else:
                             button.color=button.passive_color
                             button.border_color=(0,0,0)
@@ -581,41 +597,42 @@ while running:
     if stage=='nest':
         pass
         if day==6:
-                    choosecombat=True
-                    stage='combat'
+            choosecombat=True
+            stage='combat'
 
 
 
 
     if stage=='collecting':
-        player.move_towards(dt)
-
-        
-        player.update()
-        for food in foods:
-            food.update()
-            if player.rect.colliderect(food.rect) and player.carrying==None:
-                if food.count<5:
-                    food.count+=1
-                    food.img=food.images[food.count]
-                    player.carrying=food
+        for worker in workers:
+            worker.move_towards(dt)
+            worker.update()
+            for food in foods:
+                food.update()
+                if worker.rect.colliderect(food.rect) and worker.carrying==None:
+                    if food.count<5:
+                        food.count+=1
+                        food.img=food.images[food.count]
+                        worker.carrying=food
                 
-        if player.rect.colliderect(nest.rect) and player.carrying:
-            if player.carrying.count==5:
-                if player.carrying.name=='mosquito': blood_clot+=1
-                if player.carrying.name=='bread':wheat+=1
-                if player.carrying.name=='apple':apple_seed+=1
-                if player.carrying.name=='chips':salt+=1
-                if player.carrying.name=='honeycomb':honey+=1
-                if player.carrying.name=='leaf':leaf+=1
-            player.carrying=None
-            calories+=2
-            stamina-=1
+            if worker.rect.colliderect(nest.rect) and worker.carrying:
+                if worker.carrying.count==5:
+                    if worker.carrying.type=='mosquito': blood_clot+=1
+                    if worker.carrying.type=='bread':wheat+=1
+                    if worker.carrying.type=='apple':apple_seed+=1
+                    if worker.carrying.type=='chips':salt+=1
+                    if worker.carrying.type=='honeycomb':honey+=1
+                    if worker.carrying.type=='leaf':leaf+=1
+                worker.carrying=None
+                calories+=2
+                stamina-=1/len(workers)
 
             if stamina<=0:
                 stage='nest'
                 collected=True
-                food=[]
+                foods=[]
+                transition=True
+                darkness=255
         
     if stage=='combat' or stage=='combat2':
         if choosecombat:
@@ -835,20 +852,21 @@ while running:
         screen.blit(farmground,(0,0))
         for food in foods:
             food.draw(screen)
-        player.draw(screen)
-        if player.carrying!=None:
-            screen.blit(player.carrying.crumb,(player.x-15,player.y-15))
-        
-        if player.is_moving==True:
-            player.animation_timer+=dt
-            if player.animation_timer>player.animation_speed:
-                player.animation_timer=0
-                player.frame_index+=1
-                player.img=player.images[player.frame_index%len(player.images)]
+        for worker in workers:
+            worker.draw(screen)
+            if worker.carrying!=None:
+                screen.blit(worker.carrying.crumb,(worker.x-15,worker.y-15))
+            
+            if worker.is_moving==True:
+                worker.animation_timer+=dt
+                if worker.animation_timer>worker.animation_speed:
+                    worker.animation_timer=0
+                    worker.frame_index+=1
+                    worker.img=worker.images[worker.frame_index%len(worker.images)]
         pygame.draw.rect(screen,(240,219,211),(1250,20,220,120))
         pygame.draw.rect(screen,(0,0,0),(1250,20,220,120),width=5)
         screen.blit(stamina_icon,(1260,30))
-        draw_text(str(stamina),ui_font,(0,0,0),1370,30)
+        draw_text(str(math.ceil(stamina)),ui_font,(0,0,0),1370,30)
         
         screen.blit(black_screen,(0,0))
 
