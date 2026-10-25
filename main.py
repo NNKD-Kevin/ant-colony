@@ -676,7 +676,7 @@ while running:
                             button.border_color=(0,0,0)
                 if storaging:
                     for button in barrack_buttons:
-                        if button.collidepoint(mouse_pos):
+                        if button.rect.collidepoint(mouse_pos):
                             button.border_color=(255,255,255)
                             button.color=button.active_color
                             if event.type==pygame.MOUSEBUTTONDOWN:
