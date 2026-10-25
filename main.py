@@ -2,6 +2,17 @@ import pygame
 import random
 import math
 import os
+import sys
+
+
+def get_resource_path(relative_path):
+    try:
+        base_path=sys._MEIPASS
+    except Exception:
+        base_path=os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
+
+
 
 pygame.init()
 pygame.mixer.init()
@@ -733,6 +744,8 @@ while running:
                         food.count += 1
                         food.img = food.images[food.count]
                         worker.carrying = food
+                        if food in foods:
+                            foods.remove(food)
                 
             if worker.rect.colliderect(nest.rect) and worker.carrying:
                 calories+=2
