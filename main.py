@@ -162,6 +162,13 @@ class Icon:
         pygame.draw.rect(screen,(255,255,255),self.rect)
         screen.blit(self.img,(self.x,self.y))
         draw_text(str(self.count),text_font,(0,0,0),self.x+60,self.y+10)
+    def update(self):
+        if self.type=='leaf':self.count=leaf
+        if self.type=='honey':self.count=honey
+        if self.type=='seed':self.count=apple_seed
+        if self.type=='blood':self.count=blood
+        if self.type=='wheat':self.count=wheat
+        if self.type=='salt':self.count=salt
 #Collecting Stage
 class WorkerAnt:
     def __init__(self,x,y):
@@ -218,7 +225,7 @@ class Food:
         elif 20<=gacha<35:self.type='honeycomb'
         elif 35<=gacha<50:self.type='leaf'
         elif 50<=gacha<65:self.type='mosquito'
-        elif 65<=gacha<100:self.type='bread'
+        elif 65<=gacha<=100:self.type='bread'
         if self.type=='bread':
             images_path='assets/food/bread'
             self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (32*8, 20*8)) for f in os.listdir(images_path) if f.endswith(".png")]
@@ -299,7 +306,7 @@ class SoldierAnt:
             self.maxhp=5+hpbuff-dmgbuff
             self.range=200
             self.dmg=2+dmgbuff
-            self.attack_speed=1
+            self.attack_speed=3
             self.attack_timer=0
         elif self.type=='dracula':
             self.hp=10+hpbuff-dmgbuff
@@ -369,10 +376,11 @@ class Acid:
         self.x=x
         self.y=y
         self.rect=pygame.Rect(self.x,self.y,10,10)
+        self.img=pygame.image.load('assets/acid.png').convert_alpha()
         self.speed=100
         self.dmg=dmg
     def draw(self,screen):
-        pygame.draw.rect(screen,green,self.rect)
+        screen.blit(self.img, (self.x,self.y))
     def update(self):
         self.rect=pygame.Rect(self.x,self.y,10,10)
     def move(self,dt):
@@ -431,8 +439,16 @@ class Enemy:
             self.skill_duration=5
             self.skill_activate=0
             
-            self.attack_animation_speed=0.05    #khúc này thêm tạm để chạy đc con grasshopper
+            self.animation_timer=0
+            self.animation_speed=0.1
+            self.attack_animation_speed=0.05
+            self.attack_animation_timer=0
             self.attack_duration=0.6
+            self.attack_hit=False
+            self.attack_target=None
+            self.attack_timer=0
+            self.frame_index=0
+            self.img=self.walks[self.frame_index]
 
         self.angle=0.0
         self.is_moving=False
@@ -460,10 +476,10 @@ class Enemy:
             self.x=250     #chỉnh sau này tùy theo size boss
         if self.y<(200):
             self.y=200
-        if self.x>(1500-500): 
-            self.x=1500-500     #chỉnh sau này tùy theo size boss
-        if self.y<(850-400):
-            self.y=850-400
+        if self.x>(1500-200): 
+            self.x=1500-200     #chỉnh sau này tùy theo size boss
+        if self.y>(850-200):
+            self.y=850-200
         if self.type=='mantis':
             target_angle=math.degrees(math.atan2(dy,dx))
             delta=(target_angle-self.angle+180)%360-180
@@ -541,9 +557,8 @@ calories=0
 running=True
 
 #Combat Stage
-mantis=Enemy(200,200,'mantis')
+mantis=Enemy(0,0,'mantis')
 grasshopper=Enemy(1000,400,'grasshopper')
-spider=Enemy(1000,400,'spider')
 bosses=[mantis]
 soldiers=[]
 ant_spawn_timer=0
@@ -667,8 +682,8 @@ while running:
                         worker.carrying=food
                 
             if worker.rect.colliderect(nest.rect) and worker.carrying:
-                if worker.carrying.count==5:
-                    if worker.carrying.type=='mosquito': blood_clot+=1
+                if worker.carrying.count==4:
+                    if worker.carrying.type=='mosquito': blood+=1
                     if worker.carrying.type=='bread':wheat+=1
                     if worker.carrying.type=='apple':apple_seed+=1
                     if worker.carrying.type=='chips':salt+=1
@@ -951,7 +966,7 @@ while running:
         screen.blit(battleground,(0,0))
         
         for boss in bosses:
-            if stage=='combat':
+            if stage=='combat' or stage=='combat2':
                 walks=getattr(boss,'walks',[])
                 attacks1=getattr(boss,'attacks1',[])
                 if boss.is_attacking and attacks1:
