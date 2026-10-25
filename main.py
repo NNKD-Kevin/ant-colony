@@ -744,6 +744,7 @@ while running:
                         food.count += 1
                         food.img = food.images[food.count]
                         worker.carrying = food
+                    elif food.count==4:
                         if food in foods:
                             foods.remove(food)
                 
