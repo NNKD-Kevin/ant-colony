@@ -16,6 +16,8 @@ ui_font=pygame.font.Font('assets/font.ttf', 70)
 hatch_font=pygame.font.Font('assets/font.ttf', 20)
 text_font=pygame.font.Font('assets/font.ttf', 15)
 
+
+
 farmground=pygame.image.load('assets/farmground.png').convert()
 battleground=pygame.image.load('assets/battleground.png').convert()
 nest_background=pygame.image.load('assets/nest.png').convert()
@@ -140,23 +142,23 @@ class Cocoon:
         screen.blit(self.img,(self.x,self.y))
         self.rect=pygame.Rect(self.x,self.y,8*10,18*10)
 class Icon:
-    def __init__(self,x,y,type):
+    def __init__(self,x,y,type,count):
         self.x=x
         self.y=y
         self.type=type
-        if self.type=='leaf':self.img,self.count=pygame.image.load('assets/icons/leaf.png').convert_alpha(),leaf
-        if self.type=='honey':self.img,self.count=pygame.image.load('assets/icons/honey.png').convert_alpha(),honey
-        if self.type=='seed':self.img,self.count=pygame.image.load('assets/icons/seed.png').convert_alpha(),apple_seed
-        if self.type=='blood':self.img,self.count=pygame.image.load('assets/icons/blood.png').convert_alpha(),blood
-        if self.type=='wheat':self.img,self.count=pygame.image.load('assets/icons/wheat.png').convert_alpha(),wheat
-        if self.type=='salt':self.img,self.count=pygame.image.load('assets/icons/salt.png').convert_alpha(),salt
+        if self.type=='leaf':self.img,self.count=pygame.image.load('assets/icons/leaf.png').convert_alpha(),count
+        if self.type=='honey':self.img,self.count=pygame.image.load('assets/icons/honey.png').convert_alpha(),count
+        if self.type=='seed':self.img,self.count=pygame.image.load('assets/icons/seed.png').convert_alpha(),count
+        if self.type=='blood':self.img,self.count=pygame.image.load('assets/icons/blood.png').convert_alpha(),count
+        if self.type=='wheat':self.img,self.count=pygame.image.load('assets/icons/wheat.png').convert_alpha(),count
+        if self.type=='salt':self.img,self.count=pygame.image.load('assets/icons/salt.png').convert_alpha(),count
         self.img=pygame.transform.scale(self.img,(50,50))
         
     def draw(self,screen):
         self.rect=pygame.Rect(self.x,self.y,120,50)
         pygame.draw.rect(screen,(255,255,255),self.rect)
         screen.blit(self.img,(self.x,self.y))
-        draw_text(str(self.count),text_font,(0,0,0),self.x+60,self.y+10)
+        draw_text(str(math.ceil(self.count)),text_font,(0,0,0),self.x+60,self.y+10)
     def update(self,leaf,honey,apple_seed,blood,wheat,salt):
         if self.type=='leaf':self.count=leaf
         if self.type=='honey':self.count=honey
@@ -513,7 +515,12 @@ class Slash:
         self.rect=pygame.rect
     def draw(self):
         pygame.draw.arc(screen, (255, 255, 255), (100, 100, 200, 200), 0, math.pi, 2)
-        
+blood=0
+wheat=0
+apple_seed=0
+salt=0
+honey=0
+leaf=0   
 #Nest Stage        
 timeline=pygame.Rect(150,50,1200,30)
 buttons=[Button(950,150,'collection'),Button(400,580,'hatch'),Button(400,280,'storage'),Button(1000,600,'sleep')]
@@ -529,15 +536,10 @@ return_button_nest=ReturnButton(1220,220)
 info_icons=[InfoButton(350,220,'worker'),InfoButton(750,220,'soldier'),InfoButton(1150,220,'scout')]
 cocoons=[Cocoon(280,250,1),Cocoon(680,250,2),Cocoon(1080,250,3)]
 notifications=[]
-hatch_icons=[Icon(100,50,'leaf'),Icon(200,50,'honey'),Icon(300,50,'seed'),Icon(400,50,'blood')]
-barrack_icons=[Icon(500,50,'wheat'),Icon(600,50,'salt')]
+hatch_icons=[Icon(300,150,'leaf',leaf),Icon(400,150,'honey',honey),Icon(500,150,'seed',apple_seed),Icon(600,150,'blood',blood)]
+barrack_icons=[Icon(500,150,'wheat',blood),Icon(600,150,'salt',blood)]
 #Storage
-blood=0
-wheat=0
-apple_seed=0
-salt=0
-honey=0
-leaf=0
+
 
 
 
@@ -604,7 +606,7 @@ while running:
                             transition=True
                             darkness=255
                             for i in range(max_foods):
-                                foods.append(Food(random.randint(400,1300),random.randint(100,750),random.randint(0,100)))
+                                foods.append(Food(random.randint(400,1300),random.randint(200,750),random.randint(0,100)))
                         if button.function=='sleep' and not transition:
                             day+=1
                             stamina=max_stamina
@@ -659,9 +661,10 @@ while running:
                                     soldiers.append(SoldierAnt(1500,850,'wood',wheat,salt))
                                 if button.type=='fire ant' and calories>=5 and apple_seed>0:
                                     calories-=5
-                                    apple-=1
+                                    apple_seed-=1
                                     soldiers.append(SoldierAnt(1500,850,'fireant',wheat,salt))
-                                if button.type=='dracula ant' and calories>=5 and blood_clot>0:
+                                if button.type=='dracula ant' and calories>=5 and blood>0:
+                                    blood-=1
                                     calories-=5
                                     soldiers.append(SoldierAnt(1500,850,'dracula',wheat,salt))
                         else:
@@ -700,18 +703,20 @@ while running:
                         worker.carrying=food
                 
             if worker.rect.colliderect(nest.rect) and worker.carrying:
-                if worker.carrying.count==4:
-                    if worker.carrying.type=='mosquito': blood+=1
-                    if worker.carrying.type=='bread':wheat+=1
-                    if worker.carrying.type=='apple':apple_seed+=1
-                    if worker.carrying.type=='chips':salt+=1
-                    if worker.carrying.type=='honeycomb':honey+=1
-                    if worker.carrying.type=='leaf':leaf+=1
+                if worker.carrying.count==5:
+                    if worker.carrying.type=='mosquito': blood+=1/len(workers)
+                    if worker.carrying.type=='bread':wheat+=1/len(workers)
+                    if worker.carrying.type=='apple':apple_seed+=1/len(workers)
+                    if worker.carrying.type=='chips':salt+=1/len(workers)
+                    if worker.carrying.type=='honeycomb':honey+=1/len(workers)
+                    if worker.carrying.type=='leaf':leaf+=1/len(workers)
+                    if worker.carrying in foods:
+                        foods.remove(worker.carrying)
                 worker.carrying=None
                 calories+=2
                 stamina-=1/len(workers)
 
-            if stamina<=0:
+            if stamina<=0 or len(foods)<=0:
                 stage='nest'
                 collected=True
                 foods=[]
@@ -945,7 +950,7 @@ while running:
                         draw_text(icon.info,text_font,(0,0,0),x+10,y-130)
                         draw_text(icon.cost,text_font,(0,0,0),x+10,y-110)
                 for icon in hatch_icons:
-                    icon.update()
+                    icon.update(leaf,honey,apple_seed,blood,wheat,salt)
                     icon.draw(screen)
             if storaging:
                 for icon in barrack_icons:
