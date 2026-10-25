@@ -557,7 +557,7 @@ running=True
 mantis=Enemy(0,0,'mantis')
 grasshopper=Enemy(1000,400,'grasshopper')
 bosses=[mantis]
-soldiers=[]
+soldiers=[SoldierAnt(0,0,'black',0,0)]
 ant_spawn_timer=0
 acids=[]
 choosecombat=False
@@ -576,7 +576,9 @@ while running:
         if stage=='start' or stage=='return':
             keys=pygame.key.get_pressed()
             if keys[pygame.K_SPACE]:
-                stage='nest'            
+                stage='nest'
+                transition=True
+                darkness=255            
         if stage=='collecting':
             if event.type==pygame.MOUSEBUTTONDOWN:
                 for worker in workers:
