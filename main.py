@@ -243,7 +243,7 @@ class Nest:
 
 #Combat Stage
 class SoldierAnt:
-    def __init__(self,x,y,type):
+    def __init__(self,x,y,type,hpbuff,dmgbuff):
         self.x=x
         self.y=y
         self.target_x=x
@@ -262,19 +262,40 @@ class SoldierAnt:
         self.is_moving=False
         self.healthbar=pygame.Rect(x-19,y-30,38,5)
         if self.type=='black':
-            self.hp=10
-            self.maxhp=10
-            self.dmg=2
+            self.hp=10+hpbuff-dmgbuff
+            self.maxhp=10+hpbuff-dmgbuff
+            self.dmg=2+dmgbuff
             self.range=0
             self.attack_speed=1
             self.attack_timer=0
         elif self.type=='wood':
-            self.hp=5
-            self.maxhp=5
+            self.hp=5+hpbuff-dmgbuff
+            self.maxhp=5+hpbuff-dmgbuff
             self.range=200
-            self.dmg=0
+            self.dmg=2+dmgbuff
             self.attack_speed=1
             self.attack_timer=0
+        elif self.type=='dracula':
+            self.hp=5+hpbuff-dmgbuff
+            self.maxhp=5+hpbuff-dmgbuff
+            self.range=200
+            self.dmg=2+dmgbuff
+            self.attack_speed=1
+            self.attack_timer=0
+        elif self.type=='fireant':
+            self.hp=5+hpbuff-dmgbuff
+            self.maxhp=5+hpbuff-dmgbuff
+            self.range=200
+            self.dmg=0+dmgbuff
+            self.attack_speed=2
+            self.attack_timer=0
+        elif self.type=='leafcutter':
+            self.hp=5+hpbuff-dmgbuff
+            self.maxhp=15+hpbuff-dmgbuff
+            self.range=200
+            self.dmg=2+dmgbuff
+            self.attack_speed=1
+            self.attack_timer=0    
         self.rangerect=pygame.Rect(self.x-19-self.range/2,self.y-24-self.range/2,38+self.range,48+self.range)
     def draw(self,screen):
         screen.blit(self.img, (self.x-19, self.y-24))
@@ -317,13 +338,13 @@ class SoldierAnt:
         pygame.draw.rect(screen,red,self.losthealthbar)
         pygame.draw.rect(screen,green,self.healthbar)
 class Acid:
-    def __init__(self,x,y,angle):
+    def __init__(self,x,y,angle,dmg):
         self.direction = angle
         self.x=x
         self.y=y
         self.rect=pygame.Rect(self.x,self.y,10,10)
         self.speed=100
-        self.dmg=2
+        self.dmg=dmg
     def draw(self,screen):
         pygame.draw.rect(screen,green,self.rect)
     def update(self):
@@ -426,15 +447,15 @@ class Enemy:
         dx=self.target_x-self.x
         dy=self.target_y-self.y
         distance=math.hypot(dx,dy)
-        if distance<=3000*dt:
+        if distance<=1000*dt:
             self.x=self.target_x
             self.y=self.target_y
             self.is_moving=False
             return
         else:
             self.is_moving=True
-            self.x+=dx/distance*3000*dt
-            self.y+=dy/distance*3000*dt
+            self.x+=dx/distance*1000*dt
+            self.y+=dy/distance*1000*dt
     def hbupdate(self):
         self.losthealthbar=pygame.Rect(250,0,1000,30)
         self.healthbar=pygame.Rect(250,0,1000*self.hp/self.maxhp,30)
@@ -504,6 +525,9 @@ soldiers=[]
 ant_spawn_timer=0
 acids=[]
 choosecombat=False
+burn=0
+burnspeed=0.5
+burn_timer=0
 
 #Game Loop
 while running:
@@ -649,9 +673,10 @@ while running:
         if bosses:
             ant_spawn_timer-=dt
             if ant_spawn_timer<0:
-                ant_spawn_timer=4
+                ant_spawn_timer=7
                 soldiers.append(SoldierAnt(1500,850,'black'))
                 soldiers.append(SoldierAnt(1500,850,'wood'))
+                soldiers.append(SoldierAnt(1500,850,'dracula'))
             if not bosses[0].is_attacking and not skill:
                 bosses[0].move_towards(dt)
             elif not skill:
@@ -666,12 +691,8 @@ while running:
                         soldier.target_x=bosses[0].x+random.uniform(-255,255)+soldier.range
                         soldier.target_y=bosses[0].y+random.uniform(-150,150)+soldier.range    
                     else:
-                        if soldier.type=='black':                
+                        if soldier.type=='wood':                
                             soldier.attack_timer+=dt
-                            if soldier.attack_timer>=soldier.attack_speed:
-                                bosses[0].hp-=soldier.dmg
-                                soldier.attack_timer=0
-                        elif soldier.type=='wood':
                             if soldier.rect.colliderect(bosses[0].rect):
                                 soldier.target_x=bosses[0].x-255-random.uniform(0,soldier.range)
                                 soldier.target_y=bosses[0].y-255-random.uniform(0,soldier.range)
@@ -679,8 +700,27 @@ while running:
                             if soldier.attack_timer>=soldier.attack_speed:
                                 dy=bosses[0].y-soldier.y
                                 dx=bosses[0].x-soldier.x
-                                acids.append(Acid(soldier.x,soldier.y,math.degrees(math.atan2(dy,dx))))
+                                acids.append(Acid(soldier.x,soldier.y,math.degrees(math.atan2(dy,dx)),self.dmg))
+                                soldier.attack_timer=0                            
+                        else:
+                            if soldier.attack_timer>=soldier.attack_speed:
                                 soldier.attack_timer=0
+                                if soldier.type=='fire ant':
+                                    if burn<100:
+                                        burn+=5
+                                bosses[0].hp-=soldier.dmg
+                                if soldier.type=='dracula':
+                                    if soldier.health<soldier.healthmax:
+                                        if soldier.health+soldier.dmg/2>soldier.healthmax:
+                                            soldier.health=soldier.healthmax
+                                        else:
+                                            soldier.health+=soldier.dmg/2
+        if burn>0:
+            burn_timer+=dt
+            if burn_timer>=burnspeed:
+                bosses[0].hp-=1
+                burn_timer=0
+                                       
         if bosses and bosses[0].hp<=0:
             try:
                 bosses.remove(bosses[0])
@@ -764,7 +804,7 @@ while running:
                     if furthestsoldier:
                         bosses[0].target_x=furthest_soldier.x
                         bosses[0].target_y=furthest_soldier.y-150
-                    boss.skill_grasshopper(dt)
+                    boss.skill_grasshopper(dt*3)
                     if boss.x==boss.target_x and boss.y==boss.target_y:
                         skill=False
                         for s in soldiers[:]:
@@ -785,11 +825,12 @@ while running:
                             bosses[0].target_x=34*5
                             bosses[0].target_y=boss.y
                     boss.skill_grasshopper(dt)
-                    if boss.x==boss.target_x and boss.y==boss.target_y:
-                        skill=False
-                        for s in soldiers[:]:
+                    for s in soldiers[:]:
                             if s.rect.colliderect(boss.rect):
                                 s.hp-=boss.dmg*5
+                    if boss.x==boss.target_x and boss.y==boss.target_y:
+                        skill=False
+
                                            
                     
                 
