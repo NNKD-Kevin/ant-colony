@@ -9,7 +9,7 @@ screen = pygame.display.set_mode((1500, 850))
 pygame.display.set_caption("Ant Colony")
 stage='nest'
 clock=pygame.time.Clock()
-cursor_img=pygame.image.load('assets/carpenter-ant/pixil-frame-0.png').convert_alpha()
+cursor_img=pygame.image.load('assets/worker-ant/pixil-frame-0.png').convert_alpha()
 cursor_img=pygame.transform.rotate(pygame.transform.scale(cursor_img,(19,24)),45)
 button_font=pygame.font.Font('assets/font.ttf', 40)
 ui_font=pygame.font.Font('assets/font.ttf', 70)
@@ -27,7 +27,12 @@ food_icon=pygame.transform.scale(food_icon,(100,100))
 stamina_icon=pygame.image.load('assets/stamina-icon.png').convert_alpha()
 stamina_icon=pygame.transform.scale(stamina_icon,(100,100))
 
-
+blood=0
+wheat=0
+apple_seed=0
+salt=0
+honey=0
+leaf=0
 
 black_screen=pygame.Surface((1500,850),pygame.SRCALPHA)
 darkness=0
@@ -139,6 +144,24 @@ class Cocoon:
     def draw(self,screen):
         screen.blit(self.img,(self.x,self.y))
         self.rect=pygame.Rect(self.x,self.y,8*10,18*10)
+class Icon:
+    def __init__(self,x,y,type):
+        self.x=x
+        self.y=y
+        self.type=type
+        if self.type=='leaf':self.img,self.count=pygame.image.load('assets/icons/leaf.png').convert_alpha(),leaf
+        if self.type=='honey':self.img,self.count=pygame.image.load('assets/icons/honey.png').convert_alpha(),honey
+        if self.type=='seed':self.img,self.count=pygame.image.load('assets/icons/seed.png').convert_alpha(),apple_seed
+        if self.type=='blood':self.img,self.count=pygame.image.load('assets/icons/blood.png').convert_alpha(),blood
+        if self.type=='wheat':self.img,self.count=pygame.image.load('assets/icons/wheat.png').convert_alpha(),wheat
+        if self.type=='salt':self.img,self.count=pygame.image.load('assets/icons/salt.png').convert_alpha(),salt
+        self.img=pygame.transform.scale(self.img,(50,50))
+        
+    def draw(self,screen):
+        self.rect=pygame.Rect(self.x,self.y,120,50)
+        pygame.draw.rect(screen,(255,255,255),self.rect)
+        screen.blit(self.img,(self.x,self.y))
+        draw_text(str(self.count),text_font,(0,0,0),self.x+60,self.y+10)
 #Collecting Stage
 class WorkerAnt:
     def __init__(self,x,y):
@@ -151,7 +174,7 @@ class WorkerAnt:
         self.speed=200
         self.is_moving=False
         self.carrying=None
-        images_path='assets/carpenter-ant'
+        images_path='assets/worker-ant'
         self.images=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (19*2,24*2)),-90) for f in os.listdir(images_path) if f.endswith(".png")]  
 
         self.rect=pygame.Rect(x-19,y-24,19*2,24*2)
@@ -225,7 +248,7 @@ class Food:
             images_path='assets/food/leaf'
             self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (23*15, 16*15)) for f in os.listdir(images_path) if f.endswith(".png")]
             self.rect=pygame.Rect(x,y,23*10,16*10)
-            self.crumb=pygame.transform.scale(pygame.image.load('assets/food/leaf-crumb.png').convert_alpha(), (5*12,5*12))
+            self.crumb=pygame.transform.scale(pygame.image.load('assets/food/leaf-crumb.png').convert_alpha(), (5*10,5*10))
         self.img=self.images[self.count]
         self.width=self.rect.width
         self.height=self.rect.height
@@ -389,9 +412,11 @@ class Enemy:
             #cái quyết định tọa độ khung và vị trí khung để random chạm cho con kiến, tạm để không, sau này cần scale
             
         elif type=='grasshopper':
-            self.img='assets/grasshopper.jpg'
-            self.img=pygame.image.load(self.img).convert_alpha()
-            self.img=pygame.transform.scale(self.img,(450,300))
+            walks_path='assets/grasshopper-walking'
+            attacks_path='assets/grasshopper-attack-1'
+            self.walks=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{walks_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(walks_path) if f.endswith(".png")]
+            self.attacks1=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attacks_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(attacks_path) if f.endswith(".png")]
+            self.img=self.walks[0]
             self.rect=pygame.Rect(x-225,y-150,450,300)
             self.speed=200
             self.hp=250
@@ -490,14 +515,10 @@ return_button_nest=ReturnButton(1220,220)
 info_icons=[InfoButton(350,220,'worker'),InfoButton(750,220,'soldier'),InfoButton(1150,220,'scout')]
 cocoons=[Cocoon(280,250,1),Cocoon(680,250,2),Cocoon(1080,250,3)]
 notifications=[]
-
+hatch_icons=[Icon(100,50,'leaf'),Icon(200,50,'honey'),Icon(300,50,'seed'),Icon(400,50,'blood')]
+barrack_icons=[Icon(500,50,'wheat'),Icon(600,50,'salt')]
 #Storage
-blood_clot=0
-wheat=0
-apple_seed=0
-salt=0
-honey=0
-leaf=0
+
 
 
 
@@ -841,10 +862,6 @@ while running:
 
 
 
-
-
-
-
     #RENDER HANDLING
     if stage=='nest':
         pygame.mouse.set_visible(False)
@@ -886,6 +903,11 @@ while running:
                         pygame.draw.rect(screen,(255,200,200),info_rect)
                         draw_text(icon.info,text_font,(0,0,0),x+10,y-130)
                         draw_text(icon.cost,text_font,(0,0,0),x+10,y-110)
+                for icon in hatch_icons:
+                    icon.draw(screen)
+            if storaging:
+                for icon in barrack_icons:
+                    icon.draw(screen)
             screen.blit(food_icon,(60,130))
             draw_text(str(calories),ui_font,(0,0,0),170,130)
         mouse_x,mouse_y=pygame.mouse.get_pos()
