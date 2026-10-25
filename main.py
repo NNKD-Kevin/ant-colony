@@ -535,7 +535,7 @@ cocoons=[Cocoon(280,250,1),Cocoon(680,250,2),Cocoon(1080,250,3)]
 notifications=[]
 hatch_icons=[Icon(300,150,'leaf',leaf),Icon(400,150,'honey',honey),Icon(500,150,'seed',apple_seed),Icon(600,150,'blood',blood)]
 barrack_icons=[Icon(500,150,'wheat',blood),Icon(600,150,'salt',blood)]
-
+barrack_buttons=[HatchButton(400,250,'wheat'),HatchButton(700,250,'salt')]
 
 
 
@@ -1047,6 +1047,8 @@ while running:
                 for icon in barrack_icons:
                     icon.update(leaf,honey,apple_seed,blood,wheat,salt)
                     icon.draw(screen)
+                for button in barrack_buttons:
+                    button.draw(screen)
             screen.blit(food_icon,(60,130))
             draw_text(str(calories),ui_font,(0,0,0),170,130)
         mouse_x,mouse_y=pygame.mouse.get_pos()
