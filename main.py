@@ -39,7 +39,8 @@ apple_seed=0
 salt=0
 honey=0
 leaf=0
-
+hp_buff=0
+power_buff=0
 black_screen=pygame.Surface((1500,850),pygame.SRCALPHA)
 darkness=0
 
@@ -130,7 +131,7 @@ class InfoButton:
             self.cost='Cost: 5 calories'
         if self.type=='soldier':
             self.info='Add a soldier of the type below to your army'
-            self.cost='Cost: 5 calories + special ingredient for special ants\nLeafcutter Ant: 1 Leaf\nWood Ant: 1 Honey\nDracula Ant: 1 Blood\nFire Ant: 1 Apple Seed'
+            self.cost='Cost: 2 calories + special ingredient for special ants\nLeafcutter Ant: 1 Leaf\nWood Ant: 1 Honey\nDracula Ant: 1 Blood\nFire Ant: 1 Apple Seed'
         self.hovered=False
     def draw(self,screen):
         screen.blit(self.img,(self.x,self.y))
@@ -335,6 +336,8 @@ class SoldierAnt:
             self.attack_speed=1
             self.attack_timer=0    
         self.rangerect=pygame.Rect(self.x-19-self.range/2,self.y-24-self.range/2,38+self.range,48+self.range)
+        self.random_x=random.randint(150,1200)
+        self.random_y=random.randint(200,600)
     def draw(self,screen):
         screen.blit(self.img, (self.x-19, self.y-24))
     def update(self):
@@ -647,24 +650,24 @@ while running:
                                 if button.type=='scout ant' and calories>=5:
                                     calories-=5
                                     max_foods+=1
-                                if button.type=='soldier ant' and calories>=5:
-                                    calories-=5
+                                if button.type=='soldier ant' and calories>=2:
+                                    calories-=2
                                     soldiers.append(SoldierAnt(1500,850,'black',wheat,salt))
-                                if button.type=='leafcutter ant' and calories>=5 and leaf>0:
-                                    calories-=5
+                                if button.type=='leafcutter ant' and calories>=2 and leaf>0:
+                                    calories-=2
                                     leaf-=1
                                     soldiers.append(SoldierAnt(1500,850,'leafcutter',wheat,salt))
-                                if button.type=='wood ant' and calories>=5 and honey>0:
-                                    calories-=5
+                                if button.type=='wood ant' and calories>=2 and honey>0:
+                                    calories-=2
                                     honey-=1
                                     soldiers.append(SoldierAnt(1500,850,'wood',wheat,salt))
-                                if button.type=='fire ant' and calories>=5 and apple_seed>0:
-                                    calories-=5
+                                if button.type=='fire ant' and calories>=2 and apple_seed>0:
+                                    calories-=2
                                     apple_seed-=1
                                     soldiers.append(SoldierAnt(1500,850,'fireant',wheat,salt))
-                                if button.type=='dracula ant' and calories>=5 and blood>0:
+                                if button.type=='dracula ant' and calories>=2 and blood>0:
                                     blood-=1
-                                    calories-=5
+                                    calories-=2
                                     soldiers.append(SoldierAnt(1500,850,'dracula',wheat,salt))
                         else:
                             button.color=button.passive_color
@@ -1047,8 +1050,11 @@ while running:
                 for icon in barrack_icons:
                     icon.update(leaf,honey,apple_seed,blood,wheat,salt)
                     icon.draw(screen)
+                for soldier in soldiers:
+                    screen.blit(soldier.img,(soldier.random_x,soldier.random_y))
                 for button in barrack_buttons:
                     button.draw(screen)
+
             screen.blit(food_icon,(60,130))
             draw_text(str(calories),ui_font,(0,0,0),170,130)
         mouse_x,mouse_y=pygame.mouse.get_pos()
