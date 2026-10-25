@@ -56,13 +56,14 @@ class Button:
         self.y=y
         self.function=function
         self.rect=pygame.Rect(x,y,210,100)
-        self.active_color=(255,127,0)
-        self.passive_color=(150,75,0)
-        self.color=self.passive_color
-        self.border_color=(0,0,0)
+        self.passive=pygame.image.load('assets/button.png').convert_alpha()
+        self.passive=pygame.transform.scale(self.passive,(250,100))
+        self.active=pygame.image.load('assets/button-active.png').convert_alpha()
+        self.active=pygame.transform.scale(self.active,(250,100))
+        self.img=self.passive
     def draw(self,screen):
         if self.function!='collection':
-            pygame.draw.rect(screen,self.color,self.rect)
+            screen.blit(self.img, (self.x-20, self.y))
             if self.function=='hatch':
                 text='Hatch'
             if self.function=='storage':
@@ -72,15 +73,13 @@ class Button:
             text_surface= button_font.render(text, True, (255, 255, 255))
             text_rect = text_surface.get_rect(center=self.rect.center)
             screen.blit(text_surface, text_rect)
-            pygame.draw.rect(screen,button.border_color,button.rect,width=2)
         else:
             text='Collect'
             if not collected:
-                pygame.draw.rect(screen,self.color,self.rect)
+                screen.blit(self.img, (self.x-20, self.y))
                 text_surface= button_font.render(text, True, (255, 255, 255))
                 text_rect = text_surface.get_rect(center=self.rect.center)
                 screen.blit(text_surface, text_rect)
-                pygame.draw.rect(screen,button.border_color,button.rect,width=2)
 class ReturnButton:
     def __init__(self, x, y):
         self.x=x
@@ -126,7 +125,7 @@ class InfoButton:
             self.cost='Cost: 5 calories'
         if self.type=='soldier':
             self.info='Add a soldier of the type below to your army'
-            self.cost='Cost: 5 calories + special ingredient for special ants'
+            self.cost='Cost: 5 calories + special ingredient for special ants\nLeafcutter Ant: 1 Leaf\nWood Ant: 1 Honey\nDracula Ant: 1 Blood\nFire Ant: 1 Apple Seed'
         self.hovered=False
     def draw(self,screen):
         screen.blit(self.img,(self.x,self.y))
@@ -602,8 +601,7 @@ while running:
         if stage=='nest':
             for button in buttons:
                 if button.rect.collidepoint(mouse_pos) and menu_on==False:
-                    button.color=button.active_color
-                    button.border_color=(255,255,255)
+                    button.img=button.active
                     if event.type==pygame.MOUSEBUTTONDOWN:
                         if button.function=='collection' and collected==False:
                             stage='collecting'
@@ -624,8 +622,7 @@ while running:
                             menu_on=True
                             hatching=True
                 else:
-                    button.color=button.passive_color
-                    button.border_color=(0,0,0)
+                    button.img=button.passive
             if menu_on:
                 if event.type==pygame.MOUSEBUTTONDOWN:
                     if not menu.collidepoint(mouse_pos):
@@ -674,6 +671,11 @@ while running:
                         else:
                             button.color=button.passive_color
                             button.border_color=(0,0,0)
+                    for icon in info_icons:
+                        if icon.rect.collidepoint(mouse_pos):
+                            icon.hovered=True
+                        else:
+                            icon.hovered=False
                 if storaging:
                     for button in barrack_buttons:
                         if button.rect.collidepoint(mouse_pos):
@@ -689,11 +691,7 @@ while running:
                         else:
                             button.border_color=(0,0,0)
                             button.color=button.passive_color
-                    for icon in info_icons:
-                        if icon.rect.collidepoint(mouse_pos):
-                            icon.hovered=True
-                        else:
-                            icon.hovered=False
+                    
 
 
     #LOGIC HANDLING
@@ -971,6 +969,7 @@ while running:
                         if icon.type=='worker':w-=175
                         if icon.type=='scout':w-=150
                         if icon.type=='scout':x-=200
+                        if icon.type=='soldier':h+=50
                         info_rect=pygame.Rect(x,y-150,w,h)
                         pygame.draw.rect(screen,(255,200,200),info_rect)
                         draw_text(icon.info,text_font,(0,0,0),x+10,y-130)
