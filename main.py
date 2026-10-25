@@ -27,12 +27,7 @@ food_icon=pygame.transform.scale(food_icon,(100,100))
 stamina_icon=pygame.image.load('assets/stamina-icon.png').convert_alpha()
 stamina_icon=pygame.transform.scale(stamina_icon,(100,100))
 
-blood=0
-wheat=0
-apple_seed=0
-salt=0
-honey=0
-leaf=0
+
 
 black_screen=pygame.Surface((1500,850),pygame.SRCALPHA)
 darkness=0
@@ -521,7 +516,12 @@ notifications=[]
 hatch_icons=[Icon(100,50,'leaf'),Icon(200,50,'honey'),Icon(300,50,'seed'),Icon(400,50,'blood')]
 barrack_icons=[Icon(500,50,'wheat'),Icon(600,50,'salt')]
 #Storage
-
+blood=0
+wheat=0
+apple_seed=0
+salt=0
+honey=0
+leaf=0
 
 
 
@@ -631,6 +631,24 @@ while running:
                                 if button.type=='scout ant' and calories>=5:
                                     calories-=5
                                     max_foods+=1
+                                if button.type='soldier ant' and calories>=5:
+                                    calories-=5
+                                    soldiers.append(SoldierAnt(1500,850,'black',wheat,salt))
+                                if button.type='leafcutter ant' and calories>=5 and leaf>0:
+                                    calories-=5
+                                    leaf-=1
+                                    soldiers.append(SoldierAnt(1500,850,'leafcutter',wheat,salt))
+                                if button.type='wood ant' and calories>=5 and honey>0:
+                                    calories-=5
+                                    honey-=1
+                                    soldiers.append(SoldierAnt(1500,850,'wood',wheat,salt))
+                                if button.type='fire ant' and calories>=5 and apple_seed>0:
+                                    calories-=5
+                                    apple-=1
+                                    soldiers.append(SoldierAnt(1500,850,'fireant',wheat,salt))
+                                if button.type='dracula ant' and calories>=5 and blood_clot>0:
+                                    calories-=5
+                                    soldiers.append(SoldierAnt(1500,850,'dracula',wheat,salt))
                         else:
                             button.color=button.passive_color
                             button.border_color=(0,0,0)
