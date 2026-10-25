@@ -7,7 +7,7 @@ pygame.init()
 pygame.mixer.init()
 screen = pygame.display.set_mode((1500, 850))
 pygame.display.set_caption("Ant Colony")
-stage='nest'
+stage='start'
 clock=pygame.time.Clock()
 cursor_img=pygame.image.load('assets/worker-ant/pixil-frame-0.png').convert_alpha()
 cursor_img=pygame.transform.rotate(pygame.transform.scale(cursor_img,(19,24)),45)
@@ -17,7 +17,8 @@ hatch_font=pygame.font.Font('assets/font.ttf', 20)
 text_font=pygame.font.Font('assets/font.ttf', 15)
 
 
-
+start=pygame.image.load('assets/title-bg.png').convert()
+start=pygame.transform.scale(start,(1500,850))
 farmground=pygame.image.load('assets/farmground.png').convert()
 battleground=pygame.image.load('assets/battleground.png').convert()
 nest_background=pygame.image.load('assets/nest.png').convert()
@@ -507,14 +508,7 @@ class Enemy:
 
 
 
-class Slash:
-    def _init_(self,x,y,angle):
-        self.angle=angle
-        self.x=x
-        self.y=y
-        self.rect=pygame.rect
-    def draw(self):
-        pygame.draw.arc(screen, (255, 255, 255), (100, 100, 200, 200), 0, math.pi, 2)
+
 blood=0
 wheat=0
 apple_seed=0
@@ -550,7 +544,6 @@ day=0
 max_stamina=3
 collected=False
 stamina=3
-slashes=[]
 foods=[]
 nest=Nest(100,50)
 workers=[WorkerAnt(100,50)]
@@ -578,6 +571,10 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
+        if stage=='start':
+            keys=pygame.key.get_pressed()
+            if keys[pygame.K_SPACE]:
+                stage='collecting'            
         if stage=='collecting':
             if event.type==pygame.MOUSEBUTTONDOWN:
                 for worker in workers:
@@ -844,7 +841,6 @@ while running:
                     boss.attack_target=None
                     boss.skill_activate+=1
                     if boss.skill_activate>=boss.skill_duration:
-                        startslash=True
                         skill=True
                         furthestsoldier=False
                         boss.skill_activate=0
@@ -909,6 +905,14 @@ while running:
 
 
     #RENDER HANDLING
+    if stage=='start':
+        time_ms=pygame.time.get_ticks()
+        screen.blit(start,(0,0))
+        dynamic_font=pygame.font.Font('assets/font.ttf',30+int(math.sin(time_ms*0.002)*4))
+        text_surf=dynamic_font.render("Press Space to start",True,(255,0,0))
+        text_surf1=pygame.transform.rotate(text_surf,10)
+        text_rect=text_surf1.get_rect(center=(750, 500))
+        screen.blit(text_surf1,text_rect)
     if stage=='nest':
         pygame.mouse.set_visible(False)
         screen.blit(nest_background,(0,0))
@@ -1025,9 +1029,6 @@ while running:
             acid.draw(screen)
             acid.update()
             acid.move(dt)
-        for slash in slashes:
-            slash.draw()
-        screen.blit(black_screen,(0,0))
     #Global Rendering
     black_screen.fill((0,0,0,darkness))
     if menu_on:
