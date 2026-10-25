@@ -115,7 +115,7 @@ class InfoButton:
         self.img=pygame.transform.scale(self.img,(30,30))
         self.rect=pygame.Rect(x,y,30,30)
         if self.type=='scout':
-            self.info='Increase the daiy amount of food by 1'
+            self.info='Increase the daily amount of food by 1'
             self.cost='Cost: 5 calories'
         if self.type=='worker':
             self.info='Increase the number of workers by 1'
@@ -422,14 +422,15 @@ class Enemy:
         elif type=='grasshopper':
             walks_path='assets/grasshopper-walking'
             attacks_path='assets/grasshopper-attack-1'
+            attacks_path2='assets/grasshopper-attack-2'
             self.walks=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{walks_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(walks_path) if f.endswith(".png")]
             self.attacks1=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attacks_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(attacks_path) if f.endswith(".png")]
             self.img=self.walks[0]
             self.rect=pygame.Rect(x-225,y-150,450,300)
             self.speed=200
-            self.hp=250
-            self.maxhp=250
-            self.dmg=3
+            self.hp=500
+            self.maxhp=500
+            self.dmg=2
             self.range=100
             self.attack_speed=1
             self.attack_timer=0
@@ -520,7 +521,7 @@ wheat=0
 apple_seed=0
 salt=0
 honey=0
-leaf=0   
+leaf=0
 #Nest Stage        
 timeline=pygame.Rect(150,50,1200,30)
 buttons=[Button(950,150,'collection'),Button(400,580,'hatch'),Button(400,280,'storage'),Button(1000,600,'sleep')]
@@ -736,7 +737,7 @@ while running:
             skill=False
             choosecombat=False
         if bosses:
-            ant_spawn_timer-=dt
+            #ant_spawn_timer-=dt
             if ant_spawn_timer<0:
                 ant_spawn_timer=7
                 soldiers.append(SoldierAnt(1500,850,'black',0,0))
@@ -880,7 +881,7 @@ while running:
                         skill=False
                         for s in soldiers[:]:
                             if s.rect.colliderect(boss.rect):
-                                s.hp-=boss.dmg*5
+                                s.hp-=boss.dmg
                 else:
                     crowd=0
                     if not furthestsoldier:
@@ -898,7 +899,7 @@ while running:
                     boss.skill_grasshopper(dt)
                     for s in soldiers[:]:
                             if s.rect.colliderect(boss.rect):
-                                s.hp-=boss.dmg*5
+                                s.hp-=boss.dmg
                     if boss.x==boss.target_x and boss.y==boss.target_y:
                         skill=False
 
