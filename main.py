@@ -560,7 +560,7 @@ running=True
 mantis=Enemy(0,0,'mantis')
 grasshopper=Enemy(1000,400,'grasshopper')
 bosses=[mantis]
-soldiers=[SoldierAnt(0,0,'black',0,0)]
+soldiers=[SoldierAnt(1500,700,'black',0,0)]
 ant_spawn_timer=0
 acids=[]
 choosecombat=False
@@ -703,11 +703,13 @@ while running:
             stage='combat'
             for soldier in soldiers:
                 soldier.x=random.randint(100,1400)
+                soldier.y=1500
         if day==13:
             choosecombat=True
             stage='combat2'
             for soldier in soldiers:
                 soldier.x=random.randint(100,1400)
+                soldier.y=1500
 
 
 
@@ -990,12 +992,13 @@ while running:
         food_spawn_timer=0
         calories=0
         running=True
-
+        hp_buff=0
+        power_buff=0
         #Combat Stage
         mantis=Enemy(0,0,'mantis')
         grasshopper=Enemy(1000,400,'grasshopper')
         bosses=[mantis]
-        soldiers=[]
+        soldiers=[SoldierAnt(100,50,'black',0,0)]
         ant_spawn_timer=0
         acids=[]
         choosecombat=False
