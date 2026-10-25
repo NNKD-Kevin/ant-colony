@@ -674,9 +674,11 @@ while running:
             ant_spawn_timer-=dt
             if ant_spawn_timer<0:
                 ant_spawn_timer=7
-                soldiers.append(SoldierAnt(1500,850,'black'))
-                soldiers.append(SoldierAnt(1500,850,'wood'))
-                soldiers.append(SoldierAnt(1500,850,'dracula'))
+                soldiers.append(SoldierAnt(1500,850,'black',0,0))
+                soldiers.append(SoldierAnt(1500,850,'wood',0,0))
+                soldiers.append(SoldierAnt(1500,850,'dracula',0,0))
+                soldiers.append(SoldierAnt(1500,850,'fireant',0,0))
+                soldiers.append(SoldierAnt(1500,850,'leafcutter',0,0))
             if not bosses[0].is_attacking and not skill:
                 bosses[0].move_towards(dt)
             elif not skill:
