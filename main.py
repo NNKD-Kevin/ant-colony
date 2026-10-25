@@ -130,7 +130,8 @@ class SoldierAnt:
         self.y=y
         self.target_x=x
         self.target_y=y
-        images_path='assets/carpenter-ant'
+        if type=='black':images_path='assets/carpenter-ant'
+        if type=='wood':images_path='assets/carpenter-walking'
         self.images=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (19*2,24*2)),-90) for f in os.listdir(images_path) if f.endswith(".png")]   
         self.angle=0.0
         self.img=self.images[0]
