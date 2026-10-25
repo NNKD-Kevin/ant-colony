@@ -491,9 +491,9 @@ class Enemy:
             self.y=200
         if self.x>(1500-200): 
             self.x=1500-200     #chỉnh sau này tùy theo size boss
-        if self.y>(850-200):
-            self.y=850-200
-        if self.type=='mantis'or self.type=='grasshopper':
+        if self.y>(850-300):
+            self.y=850-300
+        if self.type=='mantis':
             target_angle=math.degrees(math.atan2(dy,dx))
             delta=(target_angle-self.angle+180)%360-180
             self.angle += max(-1, min(1, delta))
@@ -1115,7 +1115,6 @@ while running:
             boss.draw(screen)
             boss.hbupdate()
             boss.hb()
-            pygame.draw.rect(screen,(0,255,0),boss.rect,2)
         for soldier in soldiers:
             if soldier.is_moving==True:
                 soldier.animation_timer+=dt
