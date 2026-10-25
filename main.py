@@ -7,16 +7,23 @@ pygame.init()
 pygame.mixer.init()
 screen = pygame.display.set_mode((1500, 850))
 pygame.display.set_caption("Ant Colony")
-stage='collecting'
+stage='nest'
 clock=pygame.time.Clock()
 
-basic_font=pygame.font.Font('assets/font.ttf', 70)
+button_font=pygame.font.Font('assets/font.ttf', 40)
+ui_font=pygame.font.Font('assets/font.ttf', 70)
 farmground=pygame.image.load('assets/farmground.png').convert()
 battleground=pygame.image.load('assets/battleground.png').convert()
+nest_background=pygame.image.load('assets/nest.png').convert()
 farmground=pygame.transform.scale(farmground,(1500,850))
 battleground=pygame.transform.scale(battleground,(1500,850))
+nest_background=pygame.transform.scale(nest_background,(1500,850))
 food_icon=pygame.image.load('assets/food/food-icon.png').convert_alpha()
 food_icon=pygame.transform.scale(food_icon,(100,100))
+stamina_icon=pygame.image.load('assets/stamina-icon.png').convert_alpha()
+stamina_icon=pygame.transform.scale(stamina_icon,(100,100))
+black_screen=pygame.Surface((1500,850),pygame.SRCALPHA)
+darkness=0
 
 def draw_text(text, font, text_col, x, y):
     img = font.render(text, True, text_col)
@@ -25,9 +32,45 @@ green=(0,255,0)
 red=(255,0,0)
 grey=(127,127,127)
 black=(0,0,0)
-week=1
-day=0
 
+
+
+
+class Button:
+    def __init__(self, x, y, function):
+        self.x=x
+        self.y=y
+        self.function=function
+        self.rect=pygame.Rect(x,y,200,100)
+        self.active_color=(255,127,0)
+        self.passive_color=(150,75,0)
+        self.color=self.passive_color
+        self.border_color=(0,0,0)
+    def draw(self,screen):
+        if self.function!='collection':
+            pygame.draw.rect(screen,self.color,self.rect)
+            if self.function=='hatch':
+                text='Hatch'
+            if self.function=='storage':
+                text='Storage'
+            if self.function=='sleep':
+                text='Sleep'
+            text_surface= button_font.render(text, True, (255, 255, 255))
+            text_rect = text_surface.get_rect(center=self.rect.center)
+            screen.blit(text_surface, text_rect)
+            pygame.draw.rect(screen,button.border_color,button.rect,width=2)
+        else:
+            text='Collect'
+            if not collected:
+                pygame.draw.rect(screen,self.color,self.rect)
+                text_surface= button_font.render(text, True, (255, 255, 255))
+                text_rect = text_surface.get_rect(center=self.rect.center)
+                screen.blit(text_surface, text_rect)
+                pygame.draw.rect(screen,button.border_color,button.rect,width=2)
+class ReturnButton:
+    def __init__(self, x, y, location):
+        self.x=x
+        self.y=y
 
 #Collecting Stage
 class WorkerAnt:
@@ -123,7 +166,7 @@ class Nest:
     def draw(self,screen):
         pygame.draw.rect(screen,green,self.rect)
 
-#Comvat Stage
+#Combat Stage
 class SoldierAnt:
     def __init__(self,x,y,type):
         self.x=x
@@ -287,14 +330,14 @@ class Enemy:
             self.is_moving=True
             self.x+=dx/distance*self.speed*dt
             self.y+=dy/distance*self.speed*dt
-        if self.x<(34*10): 
-            self.x=34*10     #chỉnh sau này tùy theo size boss
-        if self.y<(54*10):
-            self.y=54*10
-        if self.x>(1500-34*20): 
-            self.x=1500-34*20     #chỉnh sau này tùy theo size boss
-        if self.y<(850-54*20):
-            self.y=850-54*20
+        if self.x<(250): 
+            self.x=250     #chỉnh sau này tùy theo size boss
+        if self.y<(200):
+            self.y=200
+        if self.x>(1500-500): 
+            self.x=1500-500     #chỉnh sau này tùy theo size boss
+        if self.y<(850-400):
+            self.y=850-400
         if self.type=='mantis':
             target_angle=math.degrees(math.atan2(dy,dx))
             delta=(target_angle-self.angle+180)%360-180
@@ -323,17 +366,27 @@ class Enemy:
         pygame.draw.rect(screen,red,self.healthbar)
         pygame.draw.rect(screen,black,self.losthealthbar,width=5)
 
+
+#Nest Stage
 timeline=pygame.Rect(150,50,1200,30)
-
-
-        
+buttons=[Button(1200,150,'collection'),Button(300,700,'hatch'),Button(200,350,'storage'),Button(1000,750,'sleep')]
+transition=False
+transition_speed=100
+menu_on=False
+ant_price=5
+menu=pygame.Rect(250,100,1000,600)
 #Collecting Stage
-
+max_foods=2
+week=1
+day=0
+max_stamina=3
+collected=False
+stamina=3
 foods=[]
 nest=Nest(100,50)
 player=WorkerAnt(100,50)
 food_spawn_timer=0
-vitamin=0
+calories=0
 running=True
 
 #Combat Stage
@@ -369,16 +422,38 @@ while running:
         if keys[pygame.K_3]:
             stage='combat2'
             choosecombat=True  
+        mouse_pos=pygame.mouse.get_pos()
+        if stage=='nest':
+            for button in buttons:
+                if button.rect.collidepoint(mouse_pos):
+                    button.color=button.active_color
+                    button.border_color=(255,255,255)
+                    if event.type==pygame.MOUSEBUTTONDOWN:
+                        if button.function=='collection' and collected==False:
+                            stage='collecting'
+                            for i in range(max_foods):
+                                foods.append(Food(random.randint(400,1500),random.randint(100,850),random.randint(0,100)))
+                        if button.function=='sleep' and not transition:
+                            day+=1
+                            stamina=max_stamina
+                            collected=False
+                            transition=True
+                            darkness=255
+                else:
+                    button.color=button.passive_color
+                    button.border_color=(0,0,0)
 
 
 
     #LOGIC HANDLING
+    if stage=='nest':
+        pass
+
+
+
+
     if stage=='collecting':
         player.move_towards(dt)
-        food_spawn_timer-=dt
-        if food_spawn_timer<0:
-            food_spawn_timer=15
-            foods.append(Food(random.randint(400,1500),random.randint(100,850),random.randint(0,100))) 
 
         
         player.update()
@@ -391,8 +466,13 @@ while running:
                     player.carrying=food
         if player.rect.colliderect(nest.rect) and player.carrying:
             player.carrying=None
-            vitamin+=1
-        if vitamin>=10:
+            calories+=2
+            stamina-=1
+            if stamina<=0:
+                stage='nest'
+                collected=True
+                food=[]
+        if day==6:
             choosecombat=True
             stage='combat'
     if stage=='combat' or stage=='combat2':
@@ -525,7 +605,7 @@ while running:
                 skill=False
                 for s in soldiers[:]:
                     if s.rect.colliderect(boss.rect):
-                        s.hp-=boss.dmg*5
+                        s.hp-=boss.dmg*2
                 
                 
             
@@ -542,11 +622,17 @@ while running:
 
     #RENDER HANDLING
     if stage=='nest':
-        screen.fill((255, 255, 255))
+        screen.blit(nest_background,(0,0))
         pygame.draw.rect(screen,(255,200,0),timeline)
         for i in range(0,1201,200):
             pygame.draw.rect(screen,(255,255,0),(pygame.Rect(150+i,50,50,50)))
         pygame.draw.rect(screen,(255,0,0),(pygame.Rect(150+day%7*200,50,50,50)))
+        for button in buttons:
+            button.draw(screen)
+        pygame.draw.rect(screen,(240,219,211),(50,120,220,120))
+        pygame.draw.rect(screen,(0,0,0),(50,120,220,120),width=5)
+        screen.blit(food_icon,(60,130))
+        draw_text(str(calories),ui_font,(0,0,0),170,130)
 
 
     if stage=='collecting':
@@ -565,8 +651,8 @@ while running:
                 player.img=player.images[player.frame_index%len(player.images)]
         pygame.draw.rect(screen,(240,219,211),(1250,20,220,120))
         pygame.draw.rect(screen,(0,0,0),(1250,20,220,120),width=5)
-        screen.blit(food_icon,(1260,30))
-        draw_text(str(vitamin),basic_font,(0,0,0),1370,30)
+        screen.blit(stamina_icon,(1260,30))
+        draw_text(str(stamina),ui_font,(0,0,0),1370,30)
 
 
     if stage=='combat'or stage=='combat2':
@@ -591,6 +677,7 @@ while running:
             boss.draw(screen)
             boss.hbupdate()
             boss.hb(screen)
+            pygame.draw.rect(screen,(0,255,0),boss.rect,2)
         for soldier in soldiers:
             if soldier.is_moving==True:
                 soldier.animation_timer+=dt
@@ -606,6 +693,19 @@ while running:
             acid.draw(screen)
             acid.update()
             acid.move(dt)
+    #Global Rendering
+    black_screen.fill((0,0,0,darkness))
+    screen.blit(black_screen,(0,0))
+    if transition==True:
+        darkness-=transition_speed*dt
+        if darkness<0:
+            darkness=0
+            transition=False
+    if menu_on:
+        darkness=125
+    else:
+        darkness=0
+
 
     pygame.display.update()
 
