@@ -1118,7 +1118,6 @@ while running:
             boss.draw(screen)
             boss.hbupdate()
             boss.hb()
-            pygame.draw.rect(screen,(0,255,0),boss.rect,2)
         for soldier in soldiers:
             if soldier.is_moving==True:
                 soldier.animation_timer+=dt
