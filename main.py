@@ -276,8 +276,8 @@ class SoldierAnt:
             self.attack_speed=1
             self.attack_timer=0
         elif self.type=='dracula':
-            self.hp=5+hpbuff-dmgbuff
-            self.maxhp=5+hpbuff-dmgbuff
+            self.hp=10+hpbuff-dmgbuff
+            self.maxhp=10+hpbuff-dmgbuff
             self.range=200
             self.dmg=2+dmgbuff
             self.attack_speed=1
@@ -290,7 +290,7 @@ class SoldierAnt:
             self.attack_speed=2
             self.attack_timer=0
         elif self.type=='leafcutter':
-            self.hp=5+hpbuff-dmgbuff
+            self.hp=15+hpbuff-dmgbuff
             self.maxhp=15+hpbuff-dmgbuff
             self.range=200
             self.dmg=2+dmgbuff
@@ -674,9 +674,11 @@ while running:
             ant_spawn_timer-=dt
             if ant_spawn_timer<0:
                 ant_spawn_timer=7
-                soldiers.append(SoldierAnt(1500,850,'black'))
-                soldiers.append(SoldierAnt(1500,850,'wood'))
-                soldiers.append(SoldierAnt(1500,850,'dracula'))
+                soldiers.append(SoldierAnt(1500,850,'black',0,0))
+                soldiers.append(SoldierAnt(1500,850,'wood',0,0))
+                soldiers.append(SoldierAnt(1500,850,'dracula',0,0))
+                soldiers.append(SoldierAnt(1500,850,'fireant',0,0))
+                soldiers.append(SoldierAnt(1500,850,'leafcutter',0,0))
             if not bosses[0].is_attacking and not skill:
                 bosses[0].move_towards(dt)
             elif not skill:
