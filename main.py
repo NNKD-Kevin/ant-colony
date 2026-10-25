@@ -238,7 +238,7 @@ class SoldierAnt:
     def hbupdate(self):
         self.losthealthbar=pygame.Rect(self.x-19,self.y-30,38,5)
         self.healthbar=pygame.Rect(self.x-19,self.y-30,38*self.hp/self.maxhp,5)
-    def hb(self,sreen):
+    def hb(self):
         pygame.draw.rect(screen,red,self.losthealthbar)
         pygame.draw.rect(screen,green,self.healthbar)
 class Acid:
@@ -286,6 +286,8 @@ class Enemy:
             self.attack_timer=0
             self.frame_index=0
             self.img=self.walks[self.frame_index]
+            self.skill_duration=5
+            self.skill_activate=0
             
             
             #cái quyết định tọa độ khung và vị trí khung để random chạm cho con kiến, tạm để không, sau này cần scale
@@ -361,13 +363,23 @@ class Enemy:
     def hbupdate(self):
         self.losthealthbar=pygame.Rect(250,0,1000,30)
         self.healthbar=pygame.Rect(250,0,1000*self.hp/self.maxhp,30)
-    def hb(self,sreen):
+    def hb(self):
         pygame.draw.rect(screen,grey,self.losthealthbar)
         pygame.draw.rect(screen,red,self.healthbar)
         pygame.draw.rect(screen,black,self.losthealthbar,width=5)
 
 
-#Nest Stage
+
+class Slash:
+    def _init_(self,x,y,angle):
+        self.angle=angle
+        self.x=x
+        self.y=y
+        self.rect=pygame.rect
+    def draw(self):
+        pygame.draw.arc(screen, (255, 255, 255), (100, 100, 200, 200), 0, math.pi, 2)
+        
+#Nest Stage        
 timeline=pygame.Rect(150,50,1200,30)
 buttons=[Button(1200,150,'collection'),Button(300,700,'hatch'),Button(200,350,'storage'),Button(1000,750,'sleep')]
 transition=False
@@ -382,6 +394,7 @@ day=0
 max_stamina=3
 collected=False
 stamina=3
+slashes=[]
 foods=[]
 nest=Nest(100,50)
 player=WorkerAnt(100,50)
@@ -572,12 +585,13 @@ while running:
                     boss.attack_timer=boss.attack_speed
                     boss.frame_index=0                                  #Reset back to walking after hitting
                     boss.attack_target=None
-                    if boss.type=='grasshopper':
-                        boss.skill_activate+=1
-                        if boss.skill_activate>=boss.skill_duration:
-                            skill=True
-                            furthestsoldier=False
-                            boss.skill_activate=0
+                    boss.skill_activate+=1
+                    if boss.skill_activate>=boss.skill_duration:
+                        startslash=True
+                        skill=True
+                        furthestsoldier=False
+                        boss.skill_activate=0
+                        chooseskill=random.randint(1,2)
                     
                     
             else:
@@ -594,19 +608,44 @@ while running:
             for s in soldiers[:]:
                 if s.hp<=0:
                     soldiers.remove(s)
-            if not furthestsoldier:
-                furthest_soldier=max(soldiers,key=lambda s:math.hypot(s.x-bosses[0].x,s.y-bosses[0].y),default=None)
-                furthestsoldier=True                   
-            if furthestsoldier:
-                bosses[0].target_x=furthest_soldier.x
-                bosses[0].target_y=furthest_soldier.y-150
-            boss.skill_grasshopper(dt)
-            if boss.x==boss.target_x or boss.y==boss.target_y:
+            if boss.type=='mantis':
                 skill=False
-                for s in soldiers[:]:
-                    if s.rect.colliderect(boss.rect):
-                        s.hp-=boss.dmg*2
-                
+            elif boss.type=='grasshopper':
+                if chooseskill==1:
+                    if not furthestsoldier:
+                        furthest_soldier=max(soldiers,key=lambda s:math.hypot(s.x-bosses[0].x,s.y-bosses[0].y),default=None)
+                        furthestsoldier=True                   
+                    if furthestsoldier:
+                        bosses[0].target_x=furthest_soldier.x
+                        bosses[0].target_y=furthest_soldier.y-150
+                    boss.skill_grasshopper(dt)
+                    if boss.x==boss.target_x and boss.y==boss.target_y:
+                        skill=False
+                        for s in soldiers[:]:
+                            if s.rect.colliderect(boss.rect):
+                                s.hp-=boss.dmg*5
+                else:
+                    crowd=0
+                    if not furthestsoldier:
+                        for s in soldiers[:]:
+                            if s.x>boss.x:
+                                crowd+=1
+                            elif s.x<boss.x:
+                                crowd-=1
+                        if crowd<=0:
+                            bosses[0].target_x=1500-34*5
+                            bosses[0].target_y=boss.y
+                        else:
+                            bosses[0].target_x=34*5
+                            bosses[0].target_y=boss.y
+                    boss.skill_grasshopper(dt)
+                    if boss.x==boss.target_x and boss.y==boss.target_y:
+                        skill=False
+                        for s in soldiers[:]:
+                            if s.rect.colliderect(boss.rect):
+                                s.hp-=boss.dmg*5
+                                           
+                    
                 
             
             
@@ -687,7 +726,7 @@ while running:
                     soldier.img=pygame.transform.rotate(soldier.images[soldier.frame_index%len(soldier.images)], -soldier.angle)
             soldier.draw(screen)
             soldier.hbupdate()
-            soldier.hb(screen)
+            soldier.hb()
             soldier.updaterange()
         for acid in acids:
             acid.draw(screen)
@@ -707,6 +746,8 @@ while running:
         darkness=0
 
 
+        for slash in slashes:
+            slash.draw()
     pygame.display.update()
 
 
