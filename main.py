@@ -735,7 +735,6 @@ while running:
                         worker.carrying = food
                 
             if worker.rect.colliderect(nest.rect) and worker.carrying:
-                worker.carrying=None
                 calories+=2
                 stamina-=1/len(workers)
                 gacha=random.randint(1,5)
@@ -746,6 +745,7 @@ while running:
                     if worker.carrying.type=='chips':salt+=1
                     if worker.carrying.type=='honeycomb':honey+=1
                     if worker.carrying.type=='leaf':leaf+=1
+                worker.carrying=None
 
             if stamina<=0 or len(foods)<=0:
                 stage='nest'
