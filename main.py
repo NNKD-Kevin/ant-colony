@@ -157,7 +157,7 @@ class Icon:
         pygame.draw.rect(screen,(255,255,255),self.rect)
         screen.blit(self.img,(self.x,self.y))
         draw_text(str(self.count),text_font,(0,0,0),self.x+60,self.y+10)
-    def update(self):
+    def update(self,leaf,honey,apple_seed,blood,wheat,salt):
         if self.type=='leaf':self.count=leaf
         if self.type=='honey':self.count=honey
         if self.type=='seed':self.count=apple_seed
@@ -646,22 +646,22 @@ while running:
                                 if button.type=='scout ant' and calories>=5:
                                     calories-=5
                                     max_foods+=1
-                                if button.type='soldier ant' and calories>=5:
+                                if button.type=='soldier ant' and calories>=5:
                                     calories-=5
                                     soldiers.append(SoldierAnt(1500,850,'black',wheat,salt))
-                                if button.type='leafcutter ant' and calories>=5 and leaf>0:
+                                if button.type=='leafcutter ant' and calories>=5 and leaf>0:
                                     calories-=5
                                     leaf-=1
                                     soldiers.append(SoldierAnt(1500,850,'leafcutter',wheat,salt))
-                                if button.type='wood ant' and calories>=5 and honey>0:
+                                if button.type=='wood ant' and calories>=5 and honey>0:
                                     calories-=5
                                     honey-=1
                                     soldiers.append(SoldierAnt(1500,850,'wood',wheat,salt))
-                                if button.type='fire ant' and calories>=5 and apple_seed>0:
+                                if button.type=='fire ant' and calories>=5 and apple_seed>0:
                                     calories-=5
                                     apple-=1
                                     soldiers.append(SoldierAnt(1500,850,'fireant',wheat,salt))
-                                if button.type='dracula ant' and calories>=5 and blood_clot>0:
+                                if button.type=='dracula ant' and calories>=5 and blood_clot>0:
                                     calories-=5
                                     soldiers.append(SoldierAnt(1500,850,'dracula',wheat,salt))
                         else:
@@ -945,9 +945,11 @@ while running:
                         draw_text(icon.info,text_font,(0,0,0),x+10,y-130)
                         draw_text(icon.cost,text_font,(0,0,0),x+10,y-110)
                 for icon in hatch_icons:
+                    icon.update()
                     icon.draw(screen)
             if storaging:
                 for icon in barrack_icons:
+                    icon.update(leaf,honey,apple_seed,blood,wheat,salt)
                     icon.draw(screen)
             screen.blit(food_icon,(60,130))
             draw_text(str(calories),ui_font,(0,0,0),170,130)
