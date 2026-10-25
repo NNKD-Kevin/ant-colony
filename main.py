@@ -130,7 +130,7 @@ class InfoButton:
         self.x=x
         self.y=y
         self.type=type
-        self.img=pygame.image.load('assets/info-icon.png').convert_alpha()
+        self.img=pygame.image.load(get_resource_path('assets/info-icon.png')).convert_alpha()
         self.img=pygame.transform.scale(self.img,(30,30))
         self.rect=pygame.Rect(x,y,30,30)
         if self.type=='scout':
@@ -165,12 +165,12 @@ class Icon:
         self.x=x
         self.y=y
         self.type=type
-        if self.type=='leaf':self.img,self.count=pygame.image.load('assets/icons/leaf.png').convert_alpha(),count
-        if self.type=='honey':self.img,self.count=pygame.image.load('assets/icons/honey.png').convert_alpha(),count
-        if self.type=='seed':self.img,self.count=pygame.image.load('assets/icons/seed.png').convert_alpha(),count
-        if self.type=='blood':self.img,self.count=pygame.image.load('assets/icons/blood.png').convert_alpha(),count
-        if self.type=='wheat':self.img,self.count=pygame.image.load('assets/icons/wheat.png').convert_alpha(),count
-        if self.type=='salt':self.img,self.count=pygame.image.load('assets/icons/salt.png').convert_alpha(),count
+        if self.type=='leaf':self.img,self.count=pygame.image.load(get_resource_path('assets/icons/leaf.png')).convert_alpha(),count
+        if self.type=='honey':self.img,self.count=pygame.image.load(get_resource_path('assets/icons/honey.png')).convert_alpha(),count
+        if self.type=='seed':self.img,self.count=pygame.image.load(get_resource_path('assets/icons/seed.png')).convert_alpha(),count
+        if self.type=='blood':self.img,self.count=pygame.image.load(get_resource_path('assets/icons/blood.png')).convert_alpha(),count
+        if self.type=='wheat':self.img,self.count=pygame.image.load(get_resource_path('assets/icons/wheat.png')).convert_alpha(),count
+        if self.type=='salt':self.img,self.count=pygame.image.load(get_resource_path('assets/icons/salt.png')).convert_alpha(),count
         self.img=pygame.transform.scale(self.img,(50,50))
         
     def draw(self,screen):
@@ -198,7 +198,7 @@ class WorkerAnt:
         self.speed=200
         self.is_moving=False
         self.carrying=None
-        images_path='assets/worker-ant'
+        images_path=get_resource_path('assets/worker-ant')
         self.images=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (19*2,24*2)),-90) for f in os.listdir(images_path) if f.endswith(".png")]  
 
         self.rect=pygame.Rect(x-19,y-24,19*2,24*2)
@@ -244,35 +244,35 @@ class Food:
         elif 50<=gacha<65:self.type='mosquito'
         elif 65<=gacha<=100:self.type='bread'
         if self.type=='bread':
-            images_path='assets/food/bread'
+            images_path=get_resource_path('assets/food/bread')
             self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (32*8, 20*8)) for f in os.listdir(images_path) if f.endswith(".png")]
             self.rect=pygame.Rect(x,y,32*8,20*8)
-            self.crumb=pygame.transform.scale(pygame.image.load('assets/food/breadcrumb.png').convert_alpha(), (5*12,5*12))
+            self.crumb=pygame.transform.scale(pygame.image.load(get_resource_path('assets/food/breadcrumb.png')).convert_alpha(), (5*12,5*12))
         if self.type=='apple':
-            images_path='assets/food/apple'
+            images_path=get_resource_path('assets/food/apple')
             self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (20*8, 19*8)) for f in os.listdir(images_path) if f.endswith(".png")]
             self.rect=pygame.Rect(x,y,20*8,19*8)
-            self.crumb=pygame.transform.scale(pygame.image.load('assets/food/apple-crumb.png').convert_alpha(), (5*12,5*12))
+            self.crumb=pygame.transform.scale(pygame.image.load(get_resource_path('assets/food/apple-crumb.png')).convert_alpha(), (5*12,5*12))
         if self.type=='chips':
-            images_path='assets/food/chips'
+            images_path=get_resource_path('assets/food/chips')
             self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (35*6, 22*6)) for f in os.listdir(images_path) if f.endswith(".png")]
             self.rect=pygame.Rect(x,y,35*6,22*6)
-            self.crumb=pygame.transform.scale(pygame.image.load('assets/food/chips-crumb.png').convert_alpha(), (5*10,5*10  ))
+            self.crumb=pygame.transform.scale(pygame.image.load(get_resource_path('assets/food/chips-crumb.png')).convert_alpha(), (5*10,5*10))
         if self.type=='mosquito':
-            images_path='assets/food/dead-mosquito'
+            images_path=get_resource_path('assets/food/dead-mosquito')
             self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (59*2, 42*2)) for f in os.listdir(images_path) if f.endswith(".png")]
-            self.crumb=pygame.transform.scale(pygame.image.load('assets/food/dead-mosquito-crumb.png').convert_alpha(), (5*6,5*6))
+            self.crumb=pygame.transform.scale(pygame.image.load(get_resource_path('assets/food/dead-mosquito-crumb.png')).convert_alpha(), (5*6,5*6))
             self.rect=pygame.Rect(x,y,59*2,42*2)
         if self.type=='honeycomb':
-            images_path='assets/food/honeycomb'
+            images_path=get_resource_path('assets/food/honeycomb')
             self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (30*7, 31*7)) for f in os.listdir(images_path) if f.endswith(".png")]
             self.rect=pygame.Rect(x,y,30*7,31*7)
-            self.crumb=pygame.transform.scale(pygame.image.load('assets/food/honey-crumb.png').convert_alpha(), (11*6,14*6))
+            self.crumb=pygame.transform.scale(pygame.image.load(get_resource_path('assets/food/honey-crumb.png')).convert_alpha(), (11*6,14*6))
         if self.type=='leaf':
-            images_path='assets/food/leaf'
+            images_path=get_resource_path('assets/food/leaf')
             self.images=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (23*15, 16*15)) for f in os.listdir(images_path) if f.endswith(".png")]
             self.rect=pygame.Rect(x,y,23*10,16*10)
-            self.crumb=pygame.transform.scale(pygame.image.load('assets/food/leaf-crumb.png').convert_alpha(), (5*10,5*10))
+            self.crumb=pygame.transform.scale(pygame.image.load(get_resource_path('assets/food/leaf-crumb.png')).convert_alpha(), (5*10,5*10))
         self.img=self.images[self.count]
         self.width=self.rect.width
         self.height=self.rect.height
@@ -295,11 +295,11 @@ class SoldierAnt:
         self.y=y
         self.target_x=x
         self.target_y=y
-        if type=='black':images_path='assets/black-ant-walking'
-        if type=='wood':images_path='assets/wood-ant-walking'
-        if type=='dracula':images_path='assets/dracula-ant-walking'
-        if type=='fireant':images_path='assets/fire-ant-walking'
-        if type=='leafcutter':images_path='assets/leafcutter-ant-walking'        
+        if type=='black':images_path=get_resource_path('assets/black-ant-walking')
+        if type=='wood':images_path=get_resource_path('assets/wood-ant-walking')
+        if type=='dracula':images_path=get_resource_path('assets/dracula-ant-walking')
+        if type=='fireant':images_path=get_resource_path('assets/fire-ant-walking')
+        if type=='leafcutter':images_path=get_resource_path('assets/leafcutter-ant-walking')      
         self.images=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (19*2,24*2)),-90) for f in os.listdir(images_path) if f.endswith(".png")]   
         self.angle=0.0
         self.img=self.images[0]
@@ -395,7 +395,7 @@ class Acid:
         self.x=x
         self.y=y
         self.rect=pygame.Rect(self.x,self.y,10,10)
-        self.img=pygame.image.load('assets/acid.png').convert_alpha()
+        self.img=pygame.image.load(get_resource_path('assets/acid.png')).convert_alpha()
         self.speed=100
         self.dmg=dmg
     def draw(self,screen):
@@ -413,14 +413,14 @@ class Enemy:
         self.target_y=y
         self.type=type
         if type=='mantis':
-            walking_path='assets/mantis-walking'
-            attack1_path='assets/mantis-attack-1'
+            walking_path=get_resource_path('assets/mantis-walking')
+            attack1_path=get_resource_path('assets/mantis-attack-1')
             self.walks=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{walking_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(walking_path) if f.endswith(".png")]
             self.attacks1=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attack1_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(attack1_path) if f.endswith(".png")]
             self.rect=pygame.Rect(x-34*5,y-54*5,250,200)   
             self.speed=100
-            self.hp=500
-            self.maxhp=500
+            self.hp=1500
+            self.maxhp=1500
             self.dmg=5
             self.range=100
             self.attack_speed=1
@@ -442,16 +442,16 @@ class Enemy:
             #cái quyết định tọa độ khung và vị trí khung để random chạm cho con kiến, tạm để không, sau này cần scale
             
         elif type=='grasshopper':
-            walks_path='assets/grasshopper-walking'
-            attacks_path='assets/grasshopper-attack-1'
-            attacks_path2='assets/grasshopper-attack-2'
+            walks_path=get_resource_path('assets/grasshopper-walking')
+            attacks_path=get_resource_path('assets/grasshopper-attack-1')
+            attacks_path2=get_resource_path('assets/grasshopper-attack-2')
             self.walks=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{walks_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(walks_path) if f.endswith(".png")]
             self.attacks1=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attacks_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(attacks_path) if f.endswith(".png")]
             self.img=self.walks[0]
             self.rect=pygame.Rect(x-225,y-150,450,300)
             self.speed=200
-            self.hp=500
-            self.maxhp=500
+            self.hp=5000
+            self.maxhp=5000
             self.dmg=2
             self.range=100
             self.attack_speed=1
@@ -963,7 +963,7 @@ while running:
         time_ms=pygame.time.get_ticks()
         screen.blit(start,(0,0))
         screen.blit(logo,(750-45*10,500-23*20))
-        dynamic_font=pygame.font.Font('assets/font.ttf',50+int(math.sin(time_ms*0.002)*4))
+        dynamic_font=pygame.font.Font(get_resource_path('assets/font.ttf'),50+int(math.sin(time_ms*0.002)*4))
         text_surf=dynamic_font.render("Press Space to start",True,(255,255,0))
         text_surf1=pygame.transform.rotate(text_surf,10)
         text_rect=text_surf1.get_rect(center=(950, 600))
@@ -971,7 +971,7 @@ while running:
     if stage=='return':
         time_ms=pygame.time.get_ticks()
         screen.blit(start,(0,0))
-        dynamic_font=pygame.font.Font('assets/font.ttf',30+int(math.sin(time_ms*0.002)*4))
+        dynamic_font=pygame.font.Font(get_resource_path('assets/font.ttf'),30+int(math.sin(time_ms*0.002)*4))
         text_surf=dynamic_font.render("Press Space to replay",True,(255,0,0))
         text_surf1=pygame.transform.rotate(text_surf,10)
         text_rect=text_surf1.get_rect(center=(750, 500))
