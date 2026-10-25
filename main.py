@@ -152,7 +152,7 @@ class SoldierAnt:
         elif self.type=='wood':
             self.hp=5
             self.maxhp=5
-            self.range=500
+            self.range=200
             self.dmg=0
             self.attack_speed=1
             self.attack_timer=0
@@ -177,10 +177,14 @@ class SoldierAnt:
             self.is_moving=True
             self.x+=dx/distance*self.speed*dt
             self.y+=dy/distance*self.speed*dt
-        if self.x<19:
-            self.x=19           #chỉnh tùy size, tạm chx cần
-        if self.y<24:
-            self.y=24
+        if self.x<(19+10):
+            self.x=19+10           #chỉnh tùy size, tạm chx cần
+        if self.y<(24+10):
+            self.y=24+10
+        if self.x>(1500-19-10):
+            self.x=1500-19-10         #chỉnh tùy size
+        if self.y>(850-24-10):
+            self.y=850-24-10
         target_angle=math.degrees(math.atan2(dy,dx))
         delta=(target_angle-self.angle+180)%360-180
         self.angle += max(-4, min(4, delta))
@@ -214,12 +218,13 @@ class Enemy:
         self.y=y
         self.target_x=x
         self.target_y=y
+        self.type=type
         if type=='mantis':
             walking_path='assets/mantis-walking'
             attack1_path='assets/mantis-attack-1'
             self.walks=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{walking_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(walking_path) if f.endswith(".png")]
             self.attacks1=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attack1_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(attack1_path) if f.endswith(".png")]
-            self.rect=pygame.Rect(x-34*5,y-54*5,250,200)
+            self.rect=pygame.Rect(x-34*5,y-54*5,250,200)   
             self.speed=100
             self.hp=500
             self.maxhp=500
@@ -237,6 +242,10 @@ class Enemy:
             self.attack_timer=0
             self.frame_index=0
             self.img=self.walks[self.frame_index]
+            
+            
+            #cái quyết định tọa độ khung và vị trí khung để random chạm cho con kiến, tạm để không, sau này cần scale
+            
         elif type=='grasshopper':
             self.img='assets/grasshopper.jpg'
             self.img=pygame.image.load(self.img).convert_alpha()
@@ -249,6 +258,11 @@ class Enemy:
             self.range=100
             self.attack_speed=1
             self.attack_timer=0
+            self.skill_duration=1
+            self.skill_activate=0
+            
+            self.attack_animation_speed=0.05    #khúc này thêm tạm để chạy đc con grasshopper
+            self.attack_duration=0.6
 
         self.angle=0.0
         self.is_moving=False
@@ -272,16 +286,21 @@ class Enemy:
             self.is_moving=True
             self.x+=dx/distance*self.speed*dt
             self.y+=dy/distance*self.speed*dt
-        if self.x<225: 
-            self.x=225     #chỉnh sau này tùy theo size boss
-        if self.y<150:
-            self.y=150
-        target_angle=math.degrees(math.atan2(dy,dx))
-        delta=(target_angle-self.angle+180)%360-180
-        self.angle += max(-1, min(1, delta))
-        self.angle%=360
-        frame=self.walks[self.frame_index%len(self.walks)]
-        self.img=pygame.transform.rotate(frame, -self.angle)
+        if self.x<(34*10) and not skill: 
+            self.x=34*10     #chỉnh sau này tùy theo size boss
+        if self.y<(54*10) and not skill:
+            self.y=54*10
+        if self.x>(1500-34*20) and not skill: 
+            self.x=1500-34*20     #chỉnh sau này tùy theo size boss
+        if self.y<(850-54*20) and not skill:
+            self.y=850-54*20
+        if self.type=='mantis':
+            target_angle=math.degrees(math.atan2(dy,dx))
+            delta=(target_angle-self.angle+180)%360-180
+            self.angle += max(-1, min(1, delta))
+            self.angle%=360
+            frame=self.walks[self.frame_index%len(self.walks)]
+            self.img=pygame.transform.rotate(frame, -self.angle)
     def hbupdate(self):
         self.losthealthbar=pygame.Rect(250,0,1000,30)
         self.healthbar=pygame.Rect(250,0,1000*self.hp/self.maxhp,30)
@@ -372,6 +391,7 @@ while running:
                 bosses.append(grasshopper)
                 if len(bosses)>1:
                     bosses.pop(0)
+            skill=False
             choosecombat=False
         if bosses:
             ant_spawn_timer-=dt
@@ -389,8 +409,8 @@ while running:
             bosses[0].update()
             for soldier in soldiers:
                 if not soldier.rangerect.colliderect(bosses[0].rect):
-                    soldier.target_x=bosses[0].x+random.uniform(-255,255)-soldier.range
-                    soldier.target_y=bosses[0].y+random.uniform(-150,150)-soldier.range    
+                    soldier.target_x=bosses[0].x+random.uniform(-255,255)+soldier.range
+                    soldier.target_y=bosses[0].y+random.uniform(-150,150)+soldier.range    
                 else:
                     if soldier.type=='black':                
                         soldier.attack_timer+=dt
@@ -430,7 +450,8 @@ while running:
                 if stage=='combat':
                     stage='combat2'
                     choosecombat=True
-        if bosses:
+        if bosses and not skill:
+            show=True
             boss=bosses[0]
             for s in soldiers[:]:
                 if s.hp<=0:
@@ -444,6 +465,8 @@ while running:
             if boss.is_attacking:
                 boss.is_moving=False
                 boss.attack_animation_timer+=dt
+                if boss.type=='grasshopper':
+                    boss.skill_activate+=dt
                 if not boss.attack_hit and boss.attack_animation_timer>=boss.attack_animation_speed:
                     boss.attack_hit=True
                     target=boss.attack_target
@@ -456,7 +479,12 @@ while running:
                     boss.attack_timer=boss.attack_speed
                     boss.frame_index=0                                  #Reset back to walking after hitting
                     boss.attack_target=None
-
+                if boss.type=='grasshopper':
+                    if boss.skill_activate>=boss.skill_duration:
+                        skill=True
+                        boss.skill_activate=0
+                    
+                    
             else:
                 boss.attack_timer=max(0.0,boss.attack_timer-dt)     #Only counts when not attacking
 
@@ -466,6 +494,17 @@ while running:
                     boss.is_attacking=True
                     boss.attack_hit=False
                     boss.attack_animation_timer=0
+        elif bosses and skill:                  #chưa xong tính làm boss bay mà chx đc :))
+            boss=bosses[0]                      
+            for s in soldiers[:]:
+                if s.hp<=0:
+                    soldiers.remove(s)
+            boss.target_x=boss.x-dt*10
+            boss.target_y=850-boss.target_x**2
+            if boss.x==0 or boss.y==0:
+                show=False
+            
+            
 
 
 
@@ -509,22 +548,23 @@ while running:
         screen.blit(battleground,(0,0))
         
         for boss in bosses:
-            walks=getattr(boss,'walks',[])
-            attacks1=getattr(boss,'attacks1',[])
-            if boss.is_attacking and attacks1:
-                progress=boss.attack_animation_timer/boss.attack_duration   #Boss attack animation
-                index=min(int(progress*len(attacks1)),len(attacks1)-1)
-                boss.img=pygame.transform.rotate(attacks1[index], -boss.angle)
-            elif walks:
-            #Boss walking animation 
-                if boss.is_moving:
-                    boss.animation_timer+=dt
-                    if boss.animation_timer>boss.animation_speed:
-                        boss.animation_timer=0
-                        boss.frame_index+=1
-                        boss.img=pygame.transform.rotate(boss.walks[boss.frame_index%len(boss.walks)], -boss.angle)
-            boss.draw(screen)
-            pygame.draw.rect(screen,(0,255,0),boss.rect,width=5)
+            if stage=='combat':
+                walks=getattr(boss,'walks',[])
+                attacks1=getattr(boss,'attacks1',[])
+                if boss.is_attacking and attacks1:
+                    progress=boss.attack_animation_timer/boss.attack_duration   #Boss attack animation
+                    index=min(int(progress*len(attacks1)),len(attacks1)-1)
+                    boss.img=pygame.transform.rotate(attacks1[index], -boss.angle)
+                elif walks:
+                #Boss walking animation 
+                    if boss.is_moving:
+                        boss.animation_timer+=dt
+                        if boss.animation_timer>boss.animation_speed:
+                            boss.animation_timer=0
+                            boss.frame_index+=1
+                            boss.img=pygame.transform.rotate(boss.walks[boss.frame_index%len(boss.walks)], -boss.angle)
+            if show:
+                boss.draw(screen)
             boss.hbupdate()
             boss.hb(screen)
         for soldier in soldiers:
