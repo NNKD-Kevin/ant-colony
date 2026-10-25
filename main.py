@@ -266,7 +266,6 @@ class Food:
         self.img=self.images[self.count]
         self.width=self.rect.width
         self.height=self.rect.height
-        self.is_carried=False
     def draw(self,screen):
         screen.blit(self.img, (self.x-0.5*self.width, self.y-0.5*self.height))
     def update(self):
@@ -729,12 +728,11 @@ while running:
             worker.update()
             for food in foods:
                 food.update()
-                if worker.rect.colliderect(food.rect) and worker.carrying == None and not food.is_carried:
+                if worker.rect.colliderect(food.rect) and worker.carrying == None:
                     if food.count < 5:
                         food.count += 1
                         food.img = food.images[food.count]
                         worker.carrying = food
-                        food.is_carried = True
                 
             if worker.rect.colliderect(nest.rect) and worker.carrying:
                 worker.carrying=None
