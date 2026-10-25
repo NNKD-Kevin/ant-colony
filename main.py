@@ -646,22 +646,23 @@ while running:
                                 if button.type=='scout ant' and calories>=5:
                                     calories-=5
                                     max_foods+=1
-                                if button.type='soldier ant' and calories>=5:
+                                if button.type=='soldier ant' and calories>=5:
                                     calories-=5
                                     soldiers.append(SoldierAnt(1500,850,'black',wheat,salt))
-                                if button.type='leafcutter ant' and calories>=5 and leaf>0:
+                                if button.type=='leafcutter ant' and calories>=5 and leaf>0:
                                     calories-=5
                                     leaf-=1
                                     soldiers.append(SoldierAnt(1500,850,'leafcutter',wheat,salt))
-                                if button.type='wood ant' and calories>=5 and honey>0:
+                                if button.type=='wood ant' and calories>=5 and honey>0:
                                     calories-=5
                                     honey-=1
                                     soldiers.append(SoldierAnt(1500,850,'wood',wheat,salt))
-                                if button.type='fire ant' and calories>=5 and apple_seed>0:
+                                if button.type=='fire ant' and calories>=5 and apple_seed>0:
                                     calories-=5
-                                    apple-=1
+                                    apple_seed-=1
                                     soldiers.append(SoldierAnt(1500,850,'fireant',wheat,salt))
-                                if button.type='dracula ant' and calories>=5 and blood_clot>0:
+                                if button.type=='dracula ant' and calories>=5 and blood_clot>0:
+                                    blood_clot-=1
                                     calories-=5
                                     soldiers.append(SoldierAnt(1500,850,'dracula',wheat,salt))
                         else:
