@@ -21,25 +21,25 @@ stage='start'
 clock=pygame.time.Clock()
 cursor_img=pygame.image.load(get_resource_path('assets/worker-ant/pixil-frame-0.png')).convert_alpha()
 cursor_img=pygame.transform.rotate(pygame.transform.scale(cursor_img,(19,24)),45)
-button_font=pygame.font.Font('assets/font.ttf', 40)
-ui_font=pygame.font.Font('assets/font.ttf', 70)
-hatch_font=pygame.font.Font('assets/font.ttf', 20)
-text_font=pygame.font.Font('assets/font.ttf', 15)
-logo=pygame.image.load('assets/logo.png').convert_alpha()
+button_font=pygame.font.Font(get_resource_path('assets/font.ttf'), 40)
+ui_font=pygame.font.Font(get_resource_path('assets/font.ttf'), 70)
+hatch_font=pygame.font.Font(get_resource_path('assets/font.ttf'), 20)
+text_font=pygame.font.Font(get_resource_path('assets/font.ttf'), 15)
+logo=pygame.image.load(get_resource_path('assets/logo.png')).convert_alpha()
 logo=pygame.transform.scale(logo,(45*20,23*20))
 
 
-start=pygame.image.load('assets/title-bg.png').convert()
+start=pygame.image.load(get_resource_path('assets/title-bg.png')).convert()
 start=pygame.transform.scale(start,(1500,850))
-farmground=pygame.image.load('assets/farmground.png').convert()
-battleground=pygame.image.load('assets/battleground.png').convert()
-nest_background=pygame.image.load('assets/nest.png').convert()
+farmground=pygame.image.load(get_resource_path('assets/farmground.png')).convert()
+battleground=pygame.image.load(get_resource_path('assets/battleground.png')).convert()
+nest_background=pygame.image.load(get_resource_path('assets/nest.png')).convert()
 farmground=pygame.transform.scale(farmground,(1500,850))
 battleground=pygame.transform.scale(battleground,(1500,850))
 nest_background=pygame.transform.scale(nest_background,(1500,850))
-food_icon=pygame.image.load('assets/food/food-icon.png').convert_alpha()
+food_icon=pygame.image.load(get_resource_path('assets/food/food-icon.png')).convert_alpha()
 food_icon=pygame.transform.scale(food_icon,(100,100))
-stamina_icon=pygame.image.load('assets/stamina-icon.png').convert_alpha()
+stamina_icon=pygame.image.load(get_resource_path('assets/stamina-icon.png')).convert_alpha()
 stamina_icon=pygame.transform.scale(stamina_icon,(100,100))
 
 #Storage
@@ -602,8 +602,8 @@ while running:
         if stage=='collecting':
             if event.type==pygame.MOUSEBUTTONDOWN:
                 for worker in workers:
-                    worker.target_x=event.pos[0]+random.randint(-20*len(workers),20*len(workers))
-                    worker.target_y=event.pos[1]+random.randint(-20*len(workers),20*len(workers))
+                    worker.target_x=event.pos[0]+min(random.randint(-20*len(workers),20*len(workers)),120)
+                    worker.target_y=event.pos[1]+min(random.randint(-20*len(workers),20*len(workers)),120)
         if keys[pygame.K_1]:
             stage='collecting'
         if keys[pygame.K_2]:
