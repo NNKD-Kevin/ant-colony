@@ -258,7 +258,7 @@ class Enemy:
             self.range=100
             self.attack_speed=1
             self.attack_timer=0
-            self.skill_duration=1
+            self.skill_duration=5
             self.skill_activate=0
             
             self.attack_animation_speed=0.05    #khúc này thêm tạm để chạy đc con grasshopper
@@ -286,13 +286,13 @@ class Enemy:
             self.is_moving=True
             self.x+=dx/distance*self.speed*dt
             self.y+=dy/distance*self.speed*dt
-        if self.x<(34*10) and not skill: 
+        if self.x<(34*10): 
             self.x=34*10     #chỉnh sau này tùy theo size boss
-        if self.y<(54*10) and not skill:
+        if self.y<(54*10):
             self.y=54*10
-        if self.x>(1500-34*20) and not skill: 
+        if self.x>(1500-34*20): 
             self.x=1500-34*20     #chỉnh sau này tùy theo size boss
-        if self.y<(850-54*20) and not skill:
+        if self.y<(850-54*20):
             self.y=850-54*20
         if self.type=='mantis':
             target_angle=math.degrees(math.atan2(dy,dx))
@@ -301,6 +301,19 @@ class Enemy:
             self.angle%=360
             frame=self.walks[self.frame_index%len(self.walks)]
             self.img=pygame.transform.rotate(frame, -self.angle)
+    def skill_grasshopper(self,dt):
+        dx=self.target_x-self.x
+        dy=self.target_y-self.y
+        distance=math.hypot(dx,dy)
+        if distance<=3000*dt:
+            self.x=self.target_x
+            self.y=self.target_y
+            self.is_moving=False
+            return
+        else:
+            self.is_moving=True
+            self.x+=dx/distance*3000*dt
+            self.y+=dy/distance*3000*dt
     def hbupdate(self):
         self.losthealthbar=pygame.Rect(250,0,1000,30)
         self.healthbar=pygame.Rect(250,0,1000*self.hp/self.maxhp,30)
@@ -399,34 +412,35 @@ while running:
                 ant_spawn_timer=4
                 soldiers.append(SoldierAnt(1500,850,'black'))
                 soldiers.append(SoldierAnt(1500,850,'wood'))
-            if not bosses[0].is_attacking:
+            if not bosses[0].is_attacking and not skill:
                 bosses[0].move_towards(dt)
-            else:
+            elif not skill:
                 bosses[0].is_moving=False
             for soldier in soldiers:
                 soldier.move_towards(dt)
                 soldier.update()
             bosses[0].update()
-            for soldier in soldiers:
-                if not soldier.rangerect.colliderect(bosses[0].rect):
-                    soldier.target_x=bosses[0].x+random.uniform(-255,255)+soldier.range
-                    soldier.target_y=bosses[0].y+random.uniform(-150,150)+soldier.range    
-                else:
-                    if soldier.type=='black':                
-                        soldier.attack_timer+=dt
-                        if soldier.attack_timer>=soldier.attack_speed:
-                            bosses[0].hp-=soldier.dmg
-                            soldier.attack_timer=0
-                    elif soldier.type=='wood':
-                        if soldier.rect.colliderect(bosses[0].rect):
-                            soldier.target_x=bosses[0].x-255-random.uniform(0,soldier.range)
-                            soldier.target_y=bosses[0].y-255-random.uniform(0,soldier.range)
-                        soldier.attack_timer+=dt
-                        if soldier.attack_timer>=soldier.attack_speed:
-                            dy=bosses[0].y-soldier.y
-                            dx=bosses[0].x-soldier.x
-                            acids.append(Acid(soldier.x,soldier.y,math.degrees(math.atan2(dy,dx))))
-                            soldier.attack_timer=0
+            if not skill:
+                for soldier in soldiers:
+                    if not soldier.rangerect.colliderect(bosses[0].rect):
+                        soldier.target_x=bosses[0].x+random.uniform(-255,255)+soldier.range
+                        soldier.target_y=bosses[0].y+random.uniform(-150,150)+soldier.range    
+                    else:
+                        if soldier.type=='black':                
+                            soldier.attack_timer+=dt
+                            if soldier.attack_timer>=soldier.attack_speed:
+                                bosses[0].hp-=soldier.dmg
+                                soldier.attack_timer=0
+                        elif soldier.type=='wood':
+                            if soldier.rect.colliderect(bosses[0].rect):
+                                soldier.target_x=bosses[0].x-255-random.uniform(0,soldier.range)
+                                soldier.target_y=bosses[0].y-255-random.uniform(0,soldier.range)
+                            soldier.attack_timer+=dt
+                            if soldier.attack_timer>=soldier.attack_speed:
+                                dy=bosses[0].y-soldier.y
+                                dx=bosses[0].x-soldier.x
+                                acids.append(Acid(soldier.x,soldier.y,math.degrees(math.atan2(dy,dx))))
+                                soldier.attack_timer=0
         if bosses and bosses[0].hp<=0:
             try:
                 bosses.remove(bosses[0])
@@ -439,19 +453,19 @@ while running:
             acid.update()
             if not bosses:
                 break
-            if acid.rect.colliderect(bosses[0].rect):
-                bosses[0].hp-=acid.dmg
-                acids.remove(acid)
-            if bosses[0].hp<=0:
-                try:
-                    bosses.remove(bosses[0])
-                except ValueError:
-                    pass
-                if stage=='combat':
-                    stage='combat2'
-                    choosecombat=True
+            if not skill:
+                if acid.rect.colliderect(bosses[0].rect):
+                    bosses[0].hp-=acid.dmg
+                    acids.remove(acid)
+                if bosses[0].hp<=0:
+                    try:
+                        bosses.remove(bosses[0])
+                    except ValueError:
+                        pass
+                    if stage=='combat':
+                        stage='combat2'
+                        choosecombat=True
         if bosses and not skill:
-            show=True
             boss=bosses[0]
             for s in soldiers[:]:
                 if s.hp<=0:
@@ -464,9 +478,7 @@ while running:
                 bosses[0].target_y=nearest_soldier.y
             if boss.is_attacking:
                 boss.is_moving=False
-                boss.attack_animation_timer+=dt
-                if boss.type=='grasshopper':
-                    boss.skill_activate+=dt
+                boss.attack_animation_timer+=dt                    
                 if not boss.attack_hit and boss.attack_animation_timer>=boss.attack_animation_speed:
                     boss.attack_hit=True
                     target=boss.attack_target
@@ -479,10 +491,12 @@ while running:
                     boss.attack_timer=boss.attack_speed
                     boss.frame_index=0                                  #Reset back to walking after hitting
                     boss.attack_target=None
-                if boss.type=='grasshopper':
-                    if boss.skill_activate>=boss.skill_duration:
-                        skill=True
-                        boss.skill_activate=0
+                    if boss.type=='grasshopper':
+                        boss.skill_activate+=1
+                        if boss.skill_activate>=boss.skill_duration:
+                            skill=True
+                            furthestsoldier=False
+                            boss.skill_activate=0
                     
                     
             else:
@@ -494,15 +508,25 @@ while running:
                     boss.is_attacking=True
                     boss.attack_hit=False
                     boss.attack_animation_timer=0
-        elif bosses and skill:                  #chưa xong tính làm boss bay mà chx đc :))
+        elif bosses and skill:              
             boss=bosses[0]                      
             for s in soldiers[:]:
                 if s.hp<=0:
                     soldiers.remove(s)
-            boss.target_x=boss.x-dt*10
-            boss.target_y=850-boss.target_x**2
-            if boss.x==0 or boss.y==0:
-                show=False
+            if not furthestsoldier:
+                furthest_soldier=max(soldiers,key=lambda s:math.hypot(s.x-bosses[0].x,s.y-bosses[0].y),default=None)
+                furthestsoldier=True                   
+            if furthestsoldier:
+                bosses[0].target_x=furthest_soldier.x
+                bosses[0].target_y=furthest_soldier.y-150
+            boss.skill_grasshopper(dt)
+            if boss.x==boss.target_x or boss.y==boss.target_y:
+                skill=False
+                for s in soldiers[:]:
+                    if s.rect.colliderect(boss.rect):
+                        s.hp-=boss.dmg*5
+                
+                
             
             
 
@@ -563,8 +587,7 @@ while running:
                             boss.animation_timer=0
                             boss.frame_index+=1
                             boss.img=pygame.transform.rotate(boss.walks[boss.frame_index%len(boss.walks)], -boss.angle)
-            if show:
-                boss.draw(screen)
+            boss.draw(screen)
             boss.hbupdate()
             boss.hb(screen)
         for soldier in soldiers:
