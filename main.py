@@ -72,9 +72,9 @@ class Button:
         self.y=y
         self.function=function
         self.rect=pygame.Rect(x,y,210,100)
-        self.passive=pygame.image.load('assets/button.png').convert_alpha()
+        self.passive=pygame.image.load(get_resource_path('assets/button.png')).convert_alpha()
         self.passive=pygame.transform.scale(self.passive,(250,100))
-        self.active=pygame.image.load('assets/button-active.png').convert_alpha()
+        self.active=pygame.image.load(get_resource_path('assets/button-active.png')).convert_alpha()
         self.active=pygame.transform.scale(self.active,(250,100))
         self.img=self.passive
     def draw(self,screen):
@@ -100,8 +100,8 @@ class ReturnButton:
     def __init__(self, x, y):
         self.x=x
         self.y=y
-        self.passive_img=pygame.image.load('assets/return-button.png').convert_alpha()
-        self.active_img=pygame.image.load('assets/return-button-active.png').convert_alpha()
+        self.passive_img=pygame.image.load(get_resource_path('assets/return-button.png')).convert_alpha()
+        self.active_img=pygame.image.load(get_resource_path('assets/return-button-active.png')).convert_alpha()
         self.passive_img=pygame.transform.scale(self.passive_img,(100,100))
         self.active_img=pygame.transform.scale(self.active_img,(100,100))
         self.img=self.passive_img
@@ -153,9 +153,9 @@ class Cocoon:
         self.y=y
         self.type=type
         self.rect=pygame.Rect(x,y,8*7,18*7)
-        if self.type==1:self.img=pygame.image.load('assets/cocoon-1.png').convert_alpha()
-        if self.type==2:self.img=pygame.image.load('assets/cocoon-2.png').convert_alpha()
-        if self.type==3:self.img=pygame.image.load('assets/cocoon-3.png').convert_alpha()
+        if self.type==1:self.img=pygame.image.load(get_resource_path('assets/cocoon-1.png')).convert_alpha()
+        if self.type==2:self.img=pygame.image.load(get_resource_path('assets/cocoon-2.png')).convert_alpha()
+        if self.type==3:self.img=pygame.image.load(get_resource_path('assets/cocoon-3.png')).convert_alpha()
         self.img=pygame.transform.scale(self.img,(8*10,18*10))
     def draw(self,screen):
         screen.blit(self.img,(self.x,self.y))
@@ -604,14 +604,14 @@ while running:
                 for worker in workers:
                     worker.target_x=event.pos[0]+min(random.randint(-20*len(workers),20*len(workers)),120)
                     worker.target_y=event.pos[1]+min(random.randint(-20*len(workers),20*len(workers)),120)
-        if keys[pygame.K_1]:
-            stage='collecting'
-        if keys[pygame.K_2]:
-            stage='combat'  
-            choosecombat=True
-        if keys[pygame.K_3]:
-            stage='combat2'
-            choosecombat=True
+        #if keys[pygame.K_1]:
+        #    stage='collecting'
+        #if keys[pygame.K_2]:
+        #    stage='combat'  
+        #    choosecombat=True
+        #if keys[pygame.K_3]:
+        #    stage='combat2'
+        #    choosecombat=True
         mouse_pos=pygame.mouse.get_pos()
 
         #Nest Stage
@@ -626,6 +626,8 @@ while running:
                             darkness=255
                             for i in range(max_foods):
                                 foods.append(Food(random.randint(400,1300),random.randint(200,750),random.randint(0,100)))
+                            for worker in workers:
+                                worker.carrying=None
                         if button.function=='sleep' and not transition:
                             day+=1
                             stamina=max_stamina
