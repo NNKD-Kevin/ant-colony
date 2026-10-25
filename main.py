@@ -9,7 +9,7 @@ screen = pygame.display.set_mode((1500, 850))
 pygame.display.set_caption("Ant Colony")
 stage='nest'
 clock=pygame.time.Clock()
-cursor_img=pygame.image.load('assets/carpenter-ant/pixil-frame-0.png').convert_alpha()
+cursor_img=pygame.image.load('assets/worker-ant/pixil-frame-0.png').convert_alpha()
 cursor_img=pygame.transform.rotate(pygame.transform.scale(cursor_img,(19,24)),45)
 button_font=pygame.font.Font('assets/font.ttf', 40)
 ui_font=pygame.font.Font('assets/font.ttf', 70)
@@ -151,7 +151,7 @@ class WorkerAnt:
         self.speed=200
         self.is_moving=False
         self.carrying=None
-        images_path='assets/carpenter-ant'
+        images_path='assets/worker-ant'
         self.images=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (19*2,24*2)),-90) for f in os.listdir(images_path) if f.endswith(".png")]  
 
         self.rect=pygame.Rect(x-19,y-24,19*2,24*2)
@@ -248,8 +248,11 @@ class SoldierAnt:
         self.y=y
         self.target_x=x
         self.target_y=y
-        if type=='black':images_path='assets/carpenter-ant'
-        if type=='wood':images_path='assets/carpenter-walking'
+        if type=='black':images_path='assets/black-ant-walking'
+        if type=='wood':images_path='assets/wood-ant-walking'
+        if type=='dracula':images_path='assets/dracula-ant-walking'
+        if type=='fireant':images_path='assets/fire-ant-walking'
+        if type=='leafcutter':images_path='assets/leafcutter-ant-walking'        
         self.images=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (19*2,24*2)),-90) for f in os.listdir(images_path) if f.endswith(".png")]   
         self.angle=0.0
         self.img=self.images[0]
@@ -278,21 +281,21 @@ class SoldierAnt:
         elif self.type=='dracula':
             self.hp=10+hpbuff-dmgbuff
             self.maxhp=10+hpbuff-dmgbuff
-            self.range=200
+            self.range=0
             self.dmg=2+dmgbuff
             self.attack_speed=1
             self.attack_timer=0
         elif self.type=='fireant':
             self.hp=15+hpbuff-dmgbuff
             self.maxhp=15+hpbuff-dmgbuff
-            self.range=200
+            self.range=0
             self.dmg=0+dmgbuff
             self.attack_speed=2
             self.attack_timer=0
         elif self.type=='leafcutter':
             self.hp=15+hpbuff-dmgbuff
             self.maxhp=15+hpbuff-dmgbuff
-            self.range=200
+            self.range=0
             self.dmg=2+dmgbuff
             self.attack_speed=1
             self.attack_timer=0    
@@ -623,6 +626,9 @@ while running:
         if day==6:
             choosecombat=True
             stage='combat'
+        if day==13:
+            choosecombat=True
+            stage='combat2'
 
 
 
@@ -702,7 +708,7 @@ while running:
                             if soldier.attack_timer>=soldier.attack_speed:
                                 dy=bosses[0].y-soldier.y
                                 dx=bosses[0].x-soldier.x
-                                acids.append(Acid(soldier.x,soldier.y,math.degrees(math.atan2(dy,dx)),self.dmg))
+                                acids.append(Acid(soldier.x,soldier.y,math.degrees(math.atan2(dy,dx)),soldier.dmg))
                                 soldier.attack_timer=0                            
                         else:
                             if soldier.attack_timer>=soldier.attack_speed:
@@ -729,8 +735,9 @@ while running:
             except ValueError:
                 pass
             if stage=='combat':
-                stage='combat2'
-                choosecombat=True
+                stage='nest'
+                for s in soldiers[:]:
+                    s.hp=s.maxhp                
         for acid in acids[:]:
             acid.update()
             if not bosses:
@@ -747,8 +754,9 @@ while running:
                     except ValueError:
                         pass
                     if stage=='combat':
-                        stage='combat2'
-                        choosecombat=True
+                        stage='nest'
+                        for s in soldiers[:]:
+                            s.hp=s.maxhp
         if bosses and not skill:
             boss=bosses[0]
             for s in soldiers[:]:
