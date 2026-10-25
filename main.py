@@ -131,7 +131,7 @@ class InfoButton:
             self.cost='Cost: 5 calories'
         if self.type=='soldier':
             self.info='Add a soldier of the type below to your army'
-            self.cost='Cost: 2 calories + special ingredient for special ants\nLeafcutter Ant: 1 Leaf\nWood Ant: 1 Honey\nDracula Ant: 1 Blood\nFire Ant: 1 Apple Seed'
+            self.cost='Cost: 3 calories + special ingredient for special ants\nLeafcutter Ant: 1 Leaf\nWood Ant: 1 Honey\nDracula Ant: 1 Blood\nFire Ant: 1 Apple Seed'
         self.hovered=False
     def draw(self,screen):
         screen.blit(self.img,(self.x,self.y))
@@ -164,6 +164,7 @@ class Icon:
         self.img=pygame.transform.scale(self.img,(50,50))
         
     def draw(self,screen):
+        
         self.rect=pygame.Rect(self.x,self.y,120,50)
         pygame.draw.rect(screen,(255,255,255),self.rect)
         screen.blit(self.img,(self.x,self.y))
@@ -492,7 +493,7 @@ class Enemy:
             self.x=1500-200     #chỉnh sau này tùy theo size boss
         if self.y>(850-200):
             self.y=850-200
-        if self.type=='mantis':
+        if self.type=='mantis'or self.type=='grasshopper':
             target_angle=math.degrees(math.atan2(dy,dx))
             delta=(target_angle-self.angle+180)%360-180
             self.angle += max(-1, min(1, delta))
@@ -588,8 +589,8 @@ while running:
         if stage=='collecting':
             if event.type==pygame.MOUSEBUTTONDOWN:
                 for worker in workers:
-                    worker.target_x=event.pos[0]+random.randint(-30,30)
-                    worker.target_y=event.pos[1]+random.randint(-30,30)
+                    worker.target_x=event.pos[0]+random.randint(-20*len(workers),20*len(workers))
+                    worker.target_y=event.pos[1]+random.randint(-20*len(workers),20*len(workers))
         keys=pygame.key.get_pressed()
         if keys[pygame.K_1]:
             stage='collecting'
@@ -653,24 +654,24 @@ while running:
                                 if button.type=='scout ant' and calories>=5:
                                     calories-=5
                                     max_foods+=1
-                                if button.type=='soldier ant' and calories>=2:
-                                    calories-=2
+                                if button.type=='soldier ant' and calories>=3:
+                                    calories-=3
                                     soldiers.append(SoldierAnt(1500,850,'black',wheat,salt))
-                                if button.type=='leafcutter ant' and calories>=2 and leaf>0:
-                                    calories-=2
+                                if button.type=='leafcutter ant' and calories>=3 and leaf>0:
+                                    calories-=3
                                     leaf-=1
                                     soldiers.append(SoldierAnt(1500,850,'leafcutter',wheat,salt))
-                                if button.type=='wood ant' and calories>=2 and honey>0:
-                                    calories-=2
+                                if button.type=='wood ant' and calories>=3 and honey>0:
+                                    calories-=3
                                     honey-=1
                                     soldiers.append(SoldierAnt(1500,850,'wood',wheat,salt))
-                                if button.type=='fire ant' and calories>=2 and apple_seed>0:
-                                    calories-=2
+                                if button.type=='fire ant' and calories>=3 and apple_seed>0:
+                                    calories-=3
                                     apple_seed-=1
                                     soldiers.append(SoldierAnt(1500,850,'fireant',wheat,salt))
-                                if button.type=='dracula ant' and calories>=2 and blood>0:
+                                if button.type=='dracula ant' and calories>=3 and blood>0:
                                     blood-=1
-                                    calories-=2
+                                    calories-=3
                                     soldiers.append(SoldierAnt(1500,850,'dracula',wheat,salt))
                         else:
                             button.color=button.passive_color
