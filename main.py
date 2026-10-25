@@ -491,9 +491,13 @@ class Enemy:
         if self.y<(200):
             self.y=200
         if self.x>(1500-200): 
-            self.x=1500-200     #chỉnh sau này tùy theo size boss
-        if self.y>(850-200):
-            self.y=850-200
+            self.x=1500-200
+        if self.type=='mantis':
+            if self.y>850-500:
+                self.y=850-500
+        else:
+            if self.y>(850-200):
+                self.y=850-200
         if self.type=='mantis'or self.type=='grasshopper':
             target_angle=math.degrees(math.atan2(dy,dx))
             delta=(target_angle-self.angle+180)%360-180
@@ -733,19 +737,17 @@ while running:
                         food.is_carried = True
                 
             if worker.rect.colliderect(nest.rect) and worker.carrying:
-                if worker.carrying.count==5:
+                worker.carrying=None
+                calories+=2
+                stamina-=1/len(workers)
+                gacha=random.randint(1,5)
+                if gacha==5:
                     if worker.carrying.type=='mosquito': blood+=1
                     if worker.carrying.type=='bread':wheat+=1
                     if worker.carrying.type=='apple':apple_seed+=1
                     if worker.carrying.type=='chips':salt+=1
                     if worker.carrying.type=='honeycomb':honey+=1
                     if worker.carrying.type=='leaf':leaf+=1
-                    if worker.carrying in foods:
-                        foods.remove(worker.carrying)
-                worker.carrying.is_carried=False        
-                worker.carrying=None
-                calories+=2
-                stamina-=1/len(workers)
 
             if stamina<=0 or len(foods)<=0:
                 stage='nest'
@@ -815,7 +817,7 @@ while running:
                                             soldier.hp+=soldier.dmg/2
         if burn>0:
             burn_timer+=dt
-            if burn_timer>=burnspeed:
+            if burn_timer>=burnspeed and bosses:
                 bosses[0].hp-=1
                 burn_timer=0
                                        
