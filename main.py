@@ -15,6 +15,8 @@ button_font=pygame.font.Font('assets/font.ttf', 40)
 ui_font=pygame.font.Font('assets/font.ttf', 70)
 hatch_font=pygame.font.Font('assets/font.ttf', 20)
 text_font=pygame.font.Font('assets/font.ttf', 15)
+logo=pygame.image.load('assets/logo.png').convert_alpha()
+logo=pygame.transform.scale(logo,(45*20,23*20))
 
 
 start=pygame.image.load('assets/title-bg.png').convert()
@@ -909,10 +911,11 @@ while running:
     if stage=='start':
         time_ms=pygame.time.get_ticks()
         screen.blit(start,(0,0))
-        dynamic_font=pygame.font.Font('assets/font.ttf',30+int(math.sin(time_ms*0.002)*4))
-        text_surf=dynamic_font.render("Press Space to start",True,(255,0,0))
+        screen.blit(logo,(750-45*10,500-23*20))
+        dynamic_font=pygame.font.Font('assets/font.ttf',50+int(math.sin(time_ms*0.002)*4))
+        text_surf=dynamic_font.render("Press Space to start",True,(255,255,0))
         text_surf1=pygame.transform.rotate(text_surf,10)
-        text_rect=text_surf1.get_rect(center=(750, 500))
+        text_rect=text_surf1.get_rect(center=(950, 600))
         screen.blit(text_surf1,text_rect)
     if stage=='nest':
         pygame.mouse.set_visible(False)
