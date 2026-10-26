@@ -714,6 +714,9 @@ while running:
             if keys[pygame.K_h]:
                 stage='nest'
                 collected=True
+        if stage=='combat' and len(bosses)==0:
+            if keys[pygame.K_h]:
+                stage='nest'
 
                     
 
@@ -1151,6 +1154,7 @@ while running:
             acid.draw(screen)
             acid.update()
             acid.move(dt)
+        draw_text('Click H to return if stuck',text_font,(0,0,0),1250,150)
     #Global Rendering
     black_screen.fill((0,0,0,darkness))
     if menu_on:
