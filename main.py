@@ -42,6 +42,11 @@ food_icon=pygame.transform.scale(food_icon,(100,100))
 stamina_icon=pygame.image.load(get_resource_path('assets/stamina-icon.png')).convert_alpha()
 stamina_icon=pygame.transform.scale(stamina_icon,(100,100))
 
+active_dialogue_index=0
+active_chat_index=0
+
+
+
 #Collect
 leaf_icon=pygame.transform.scale(pygame.image.load(get_resource_path('assets/icons/leaf.png')).convert_alpha(),(75,75))
 wheat_icon=pygame.transform.scale(pygame.image.load(get_resource_path('assets/icons/wheat.png')).convert_alpha(),(75,75))
@@ -78,11 +83,160 @@ class TutorialAnt:
         self.x=x
         self.y=y
         images_path=get_resource_path('assets/friendly-ant')
-        self.imgs=[pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (19*2,24*2)) for f in os.listdir(images_path) if f.endswith(".png")]
+        self.imgs=[pygame.transform.flip(pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (27*6,27*6)),True,False) for f in os.listdir(images_path) if f.endswith(".png")]
         self.animation_speed=0.1
         self.animation_timer=0
         self.frame_index=0
         self.img=self.imgs[self.frame_index]
+    def update(self,dt):
+        if self.imgs:
+            self.animation_timer+=dt
+            if self.animation_timer>=self.animation_speed:
+                self.animation_timer=0
+                self.frame_index=(self.frame_index+1)%len(self.imgs)
+                self.img=self.imgs[self.frame_index]
+    def draw(self,screen):
+        if self.img:
+            screen.blit(self.img, (self.x, self.y))
+
+class TutorialManager:
+    def __init__(self):
+        self.steps=[
+            {'text':'Welcome to Tiny Colony! I am your guide!\n Click the box to hide this, or click anywhere to continue.',
+             'target':'None',
+             'condition':lambda:True,
+             'completed':False,
+             'is_intro':True   
+            },
+            {'text':'Our ant colony is hungry.\nThe first thing we diligent ants do in the morning is collecting foods.\n Click the Collect button.',
+             'target':'collect_button',
+             'condition':lambda:stage=='collecting',
+             'completed':False
+            },
+            {'text':"Good! Now click on a piece of food on the ground to move your ant toward there.",
+             'target':None,
+             'condition':lambda:any (w.carrying for w in workers),
+             'completed':False
+            },
+            {'text':"Now move your ant back to the nest. Worker ants can only carry one piece of food",
+             'target':'nest',
+             'condition':lambda:calories>0,
+             'completed':False
+            },
+            {"text":"You gathered your first piece! Now keep collecting food until your stamina runs out.",
+             'target':None,
+             'condition':lambda:collected==True,
+             'completed':False},
+            {"text":"You can see the extra materials you collected here.\nEach type of food has a small chance to drop its special material.\nClick the Return button to go back to your nest.",
+             'target':"return_button",
+             'condition':lambda:stage=='nest',
+             'completed':False},
+            {"text":"Everyday you can only collect once. So we need more worker ants to collect more food for the colony.\n Click the Hatch button to hatch more ants.",
+             'target':'hatch_button',
+             'condition':lambda:hatching==True,
+             'completed':False}
+]
+        self.current_step=0
+        self.is_waiting_to_advance=False
+        self.pulse_timer=0
+        self.is_hidden=False
+        self.displayed_text=''
+        self.char_index=0
+        self.typing_speed=100
+        self.typing_timer=0
+        self.finished_talking=True
+    def get_current_step(self):
+        return self.steps[self.current_step]
+    def check_progress(self):
+        if self.char_index ==0 or self.displayed_text=='':
+            self.displayed_text =''
+            self.char_index=0
+        step=self.get_current_step()
+
+        if self.is_hidden and step["condition"]():
+            self.is_hidden=False
+        if step["condition"]() and not self.is_waiting_to_advance and not step.get("is_intro",False):
+            self.is_waiting_to_advance=True
+            if self.current_step<len(self.steps)-1:
+                step["text"]="Great job! Click the anywhere to continue."
+            else:
+                step["text"]="That's the end of the tutorial. Now manage the colony to survive the weeks"
+    def advance(self):
+        if self.is_waiting_to_advance or self.get_current_step().get('is_intro'):
+            self.current_step+=1
+            self.is_waiting_to_advance=False
+            self.char_index=0
+            if self.current_step>=len(self.steps):
+                return False
+        return True
+    def draw(self,screen):
+        if self.is_hidden:
+            return
+        
+        step=self.get_current_step()
+        rect=(250,675,1200,150)
+        pygame.draw.rect(screen,(255,255,255),rect)
+
+        full_text = step['text']
+        if self.char_index < len(full_text):
+            self.finished_talking=False
+            self.typing_timer += dt
+            chars_to_add = int(self.typing_timer * self.typing_speed)
+            if chars_to_add > 0:
+                self.char_index = min(self.char_index + chars_to_add, len(full_text))
+                self.typing_timer = 0
+            self.displayed_text = full_text[:self.char_index]
+        else:
+            self.displayed_text = full_text
+            self.finished_talking=True
+
+        paragraphs=self.displayed_text.split('\n')
+        lines=[]
+        for paragraph in paragraphs:
+            
+            words=paragraph.split(' ')
+            current_line=""
+            for word in words:
+                test_line=current_line+word+" "
+                if text_font.size(test_line)[0]<1300:
+                    current_line=test_line
+                else:
+                    lines.append(current_line)
+                    current_line=word+" "
+            lines.append(current_line)
+
+        if not self.is_waiting_to_advance:
+            draw_text('Click box to hide',hatch_font,(150,150,150),rect[0]+20,rect[1]+120)
+
+        for i,line in enumerate(lines):
+            draw_text(line,hatch_font,(0,0,0),rect[0]+20,rect[1]+20+i*30)
+
+        if step["target"] and not self.is_waiting_to_advance:
+            self.pulse_timer+=0.1
+            pulse=int(10+5*math.sin(self.pulse_timer))
+
+            target_rect=None
+            if step['target']=='collect_button':
+                for button in buttons:
+                    if button.function=='collection':target_rect=button.rect
+            elif step['target']=='nest':
+                target_rect=nest.rect
+            elif step['target']=='return_button':
+                target_rect=return_button_collect.rect
+            elif step['target']=='hatch_button':
+                for button in buttons:
+                    if button.function=='hatch':target_rect=button.rect
+
+            if target_rect:
+                overlay=pygame.Surface((1500,850),pygame.SRCALPHA)
+                overlay.fill((0,0,0,100))
+                screen.blit(overlay,(0,0))
+
+                pygame.draw.rect(screen,(255,0,0),target_rect.inflate(pulse*2,pulse*2),width=4)
+tutorial_manager=TutorialManager()
+tutorial_on=True
+
+
 
 
 class Button:
@@ -590,7 +744,8 @@ hatch_icons=[Icon(500,150,'leaf',leaf),Icon(600,150,'honey',honey),Icon(700,150,
 barrack_icons=[Icon(500,150,'wheat',blood),Icon(600,150,'salt',blood)]
 barrack_buttons=[HatchButton(400,250,'wheat'),HatchButton(700,250,'salt')]
 barrack_info_icons=[InfoButton(370,220,'wheat'),InfoButton(950,220,'salt')]
-
+tutorial_ant=TutorialAnt(50,650)
+tutorial_on=True
 
 
 #Collecting Stage
@@ -627,6 +782,32 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+
+        #Tutorial Click Handling
+        if tutorial_on and event.type==pygame.MOUSEBUTTONDOWN:
+            mouse_pos=pygame.mouse.get_pos()
+            rect=(50,650,1400,150)
+            show_rect=(1350,780,140,40)
+
+            if tutorial_manager.is_hidden:
+                if show_rect[0]<=mouse_pos[0] <= show_rect[0]+show_rect[2] and show_rect[1]<=mouse_pos[1] <= show_rect[1]+show_rect[3]:
+                    tutorial_manager.is_hidden=False
+                    continue
+            else:
+                if tutorial_manager.get_current_step().get('is_intro'):
+                    tutorial_on=tutorial_manager.advance()
+                    continue
+
+                if (rect[0]<=mouse_pos[0] <= rect[0]+rect[2] and rect[1]<=mouse_pos[1] <= rect[1]+rect[3]):
+                    if not tutorial_manager.is_waiting_to_advance:
+                        tutorial_manager.is_hidden=True
+                        continue
+                if tutorial_manager.is_waiting_to_advance:
+                    tutorial_on=tutorial_manager.advance()
+                    continue
+
+
+
         keys=pygame.key.get_pressed()
         if stage=='start' or stage=='return':
             if keys[pygame.K_SPACE]:
@@ -797,6 +978,11 @@ while running:
 
 
     #LOGIC HANDLING
+    if tutorial_on:
+        tutorial_manager.check_progress()
+        if not tutorial_manager.finished_talking and not tutorial_manager.is_hidden:
+            tutorial_ant.update(dt)
+
     if stage=='nest':
         pass
         if day==6:
@@ -1211,10 +1397,12 @@ while running:
                     worker.animation_timer=0
                     worker.frame_index+=1
                     worker.img=worker.images[worker.frame_index%len(worker.images)]
-        pygame.draw.rect(screen,(240,219,211),(1250,20,220,120))
-        pygame.draw.rect(screen,(0,0,0),(1250,20,220,120),width=5)
+        pygame.draw.rect(screen,(240,219,211),(950,20,520,120))
+        pygame.draw.rect(screen,(0,0,0),(950,20,520,120),width=5)
         screen.blit(stamina_icon,(1260,30))
         draw_text(str(math.ceil(stamina)),ui_font,(0,0,0),1370,30)
+        screen.blit(food_icon,(960,30))
+        draw_text(str(calories),ui_font,(0,0,0),1070,30)
         draw_text('Click H to return if stuck',text_font,(0,0,0),1250,150)
         if collected:
             pygame.draw.rect(screen,(99,53,42),(300,200,900,550))
@@ -1227,6 +1415,7 @@ while running:
                     screen.blit(food_icons[i],(475,350+n*45))
                     draw_text(f'+{harvest.count(food_types[i])}',button_font,(255,255,255),415,350+n*45)
                     n+=1
+
 
 
         screen.blit(black_screen,(0,0))
@@ -1272,8 +1461,6 @@ while running:
             acid.move(dt)
         draw_text('Click H to return if stuck',text_font,(0,0,0),1250,150)
     #Global Rendering
-    pygame.mouse.set_visible(False)
-    screen.blit(cursor_img,mouse_pos)
     black_screen.fill((0,0,0,darkness))
     if menu_on:
         darkness=125
@@ -1284,6 +1471,13 @@ while running:
             transition=False
     else:
         darkness=0
+    if tutorial_on and stage!='start':
+        tutorial_manager.draw(screen)
+        tutorial_ant.draw(screen)
+    
+    pygame.mouse.set_visible(False)
+    screen.blit(cursor_img,mouse_pos)
+
 
 
         
