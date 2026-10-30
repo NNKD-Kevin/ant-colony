@@ -503,14 +503,15 @@ class SoldierAnt:
         self.y=y
         self.target_x=x
         self.target_y=y
-        if type=='black':images_path=get_resource_path('assets/black-ant-walking')
-        if type=='wood':images_path=get_resource_path('assets/wood-ant-walking')
-        if type=='dracula':images_path=get_resource_path('assets/dracula-ant-walking')
-        if type=='fireant':images_path=get_resource_path('assets/fire-ant-walking')
-        if type=='leafcutter':images_path=get_resource_path('assets/leafcutter-ant-walking')      
-        self.images=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{images_path}/{f}").convert_alpha(), (19*2,24*2)),-90) for f in os.listdir(images_path) if f.endswith(".png")]   
+        if type=='black':walk_path,attack_path=get_resource_path('assets/black-ant-walking'),get_resource_path('assets/black-ant-attack')
+        if type=='wood':walk_path,attack_path=get_resource_path('assets/wood-ant-walking'),get_resource_path('assets/wood-ant-attack')
+        if type=='dracula':walk_path,attack_path=get_resource_path('assets/dracula-ant-walking'),get_resource_path('assets/dracula-ant-attack')
+        if type=='fireant':walk_path,attack_path=get_resource_path('assets/fire-ant-walking'),get_resource_path('assets/fire-ant-attack')
+        if type=='leafcutter':walk_path,attack_path=get_resource_path('assets/leafcutter-ant-walking'),get_resource_path('assets/leafcutter-ant-attack')
+        self.walks=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{walk_path}/{f}").convert_alpha(), (19*2,24*2)),-90) for f in os.listdir(walk_path) if f.endswith(".png")]   
+        self.attacks=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attack_path}/{f}").convert_alpha(), (19*2,24*2)),-90) for f in os.listdir(attack_path) if f.endswith(".png")]
         self.angle=0.0
-        self.img=self.images[0]
+        self.img=self.walks[0]
         self.animation_timer=0
         self.animation_speed=0.02
         self.frame_index=0
@@ -518,6 +519,14 @@ class SoldierAnt:
         self.speed=200
         self.type=type
         self.is_moving=False
+
+        self.is_attacking=False
+        self.attack_animation_timer=0
+        self.attack_animation_speed=0.05
+        self.attack_duration=0.5
+        self.attack_hit=False
+        self.attack_timer=0
+
         self.healthbar=pygame.Rect(x-19,y-30,38,5)
         if self.type=='black':
             self.hp=10+hpbuff-dmgbuff
@@ -525,35 +534,30 @@ class SoldierAnt:
             self.dmg=2+dmgbuff
             self.range=0
             self.attack_speed=1
-            self.attack_timer=0
         elif self.type=='wood':
             self.hp=5+hpbuff-dmgbuff
             self.maxhp=5+hpbuff-dmgbuff
             self.range=200
             self.dmg=2+dmgbuff
             self.attack_speed=3
-            self.attack_timer=0
         elif self.type=='dracula':
             self.hp=10+hpbuff-dmgbuff
             self.maxhp=10+hpbuff-dmgbuff
             self.range=0
             self.dmg=2+dmgbuff
             self.attack_speed=1
-            self.attack_timer=0
         elif self.type=='fireant':
             self.hp=15+hpbuff-dmgbuff
             self.maxhp=15+hpbuff-dmgbuff
             self.range=0
             self.dmg=0+dmgbuff
             self.attack_speed=2
-            self.attack_timer=0
         elif self.type=='leafcutter':
             self.hp=15+hpbuff-dmgbuff
             self.maxhp=15+hpbuff-dmgbuff
             self.range=0
             self.dmg=2+dmgbuff
-            self.attack_speed=1
-            self.attack_timer=0    
+            self.attack_speed=1    
         self.rangerect=pygame.Rect(self.x-19-self.range/2,self.y-24-self.range/2,38+self.range,48+self.range)
         self.random_x=random.randint(150,1200)
         self.random_y=random.randint(300,700)
@@ -589,7 +593,7 @@ class SoldierAnt:
         delta=(target_angle-self.angle+180)%360-180
         self.angle += max(-4, min(4, delta))
         self.angle%=360
-        frame=self.images[self.frame_index%len(self.images)]
+        frame=self.walks[self.frame_index%len(self.walks)]
         self.img=pygame.transform.rotate(frame, -self.angle)
     def hbupdate(self):
         self.losthealthbar=pygame.Rect(self.x-19,self.y-30,38,5)
@@ -658,8 +662,8 @@ class Enemy:
             self.img=self.walks[0]
             self.rect=pygame.Rect(x-225,y-150,450,300)
             self.speed=200
-            self.hp=5000
-            self.maxhp=5000
+            self.hp=3000
+            self.maxhp=3000
             self.dmg=5
             self.range=100
             self.attack_speed=1
@@ -782,6 +786,7 @@ ant_price=5
 menu=pygame.Rect(150,200,1200,600)
 return_button_nest=ReturnButton(1220,220)
 return_button_collect=ReturnButton(700,600)
+return_button_combat=ReturnButton(700,600)
 info_icons=[InfoButton(350,220,'worker'),InfoButton(750,220,'soldier'),InfoButton(1150,220,'scout')]
 cocoons=[Cocoon(280,250,1),Cocoon(680,250,2),Cocoon(1080,250,3)]
 notifications=[]
@@ -791,7 +796,7 @@ barrack_buttons=[HatchButton(400,250,'wheat'),HatchButton(700,250,'salt')]
 barrack_info_icons=[InfoButton(370,220,'wheat'),InfoButton(950,220,'salt')]
 tutorial_ant=TutorialAnt(50,650)
 tutorial_on=True
-
+won=False
 
 #Collecting Stage
 max_foods=2
@@ -820,6 +825,10 @@ choosecombat=False
 burn=0
 burnspeed=0.5
 burn_timer=0
+combat1_won=False
+combat2_won=False
+combat3_won=False
+combat4_won=False
 #Game Loop
 while running:
     dt = clock.tick(60) / 1000
@@ -858,7 +867,7 @@ while running:
             if keys[pygame.K_SPACE]:
                 stage='nest'
                 transition=True
-                darkness=255  
+                darkness=255
         mouse_pos=pygame.mouse.get_pos()          
         if stage=='collecting':
             if event.type==pygame.MOUSEBUTTONDOWN and collected==False:
@@ -901,7 +910,7 @@ while running:
                                 foods.append(Food(random.randint(400,1300),random.randint(200,750),random.randint(0,100)))
                             for worker in workers:
                                 worker.carrying=None
-                        if button.function=='sleep' and not transition:
+                        if button.function=='sleep':
                             day+=1
                             stamina=max_stamina
                             collected=False
@@ -1020,6 +1029,14 @@ while running:
         if stage=='combat' and len(bosses)==0:
             if keys[pygame.K_h]:
                 stage='nest'
+        mouse_pos=pygame.mouse.get_pos()
+        if stage=='combat' and len(bosses)==0:
+            if return_button_combat.rect.collidepoint(mouse_pos):
+                return_button_combat.img=return_button_combat.active_img
+                if event.type==pygame.MOUSEBUTTONDOWN:
+                    stage='nest'
+            else:
+                return_button_combat.img=return_button_combat.passive_img
 
                     
 
@@ -1032,18 +1049,46 @@ while running:
 
     if stage=='nest':
         pass
-        if day==6:
+        if day==6 and not combat1_won:
             choosecombat=True
             stage='combat'
             for soldier in soldiers:
                 soldier.x=random.randint(100,1400)
                 soldier.y=1500
-        if day==13:
+            bosses.append(mantis)
+            bosses[0].x,bosses[0].y=500,0
+        elif day==8 and not combat2_won:
             choosecombat=True
-            stage='combat2'
+            bosses.append(grasshopper)
+            stage='combat'
             for soldier in soldiers:
                 soldier.x=random.randint(100,1400)
                 soldier.y=1500
+            bosses[0].x,bosses[0].y=500,0
+        elif day==10 and not combat3_won:
+            choosecombat=True
+            stage='combat'
+            for soldier in soldiers:
+                soldier.x=random.randint(100,1400)
+                soldier.y=1500
+            bosses.append(mantis)
+            mantis.maxhp=5000
+            mantis.hp=5000
+            mantis.dmg=12
+            mantis.attack_speed=0.1
+            mantis.attack_duration=0.4
+            bosses[0].x,bosses[0].y=500,0
+        elif day==13 and not combat4_won:
+            choosecombat=True
+            stage='combat'
+            for soldier in soldiers:
+                soldier.x=random.randint(100,1400)
+                soldier.y=1500
+            bosses.append(grasshopper)
+            grasshopper.maxhp=12000
+            grasshopper.hp=12000
+            grasshopper.dmg=10
+            bosses[0].x,bosses[0].y=500,0
 
 
 
@@ -1098,15 +1143,11 @@ while running:
                     
                     collected=True
                     foods=[]
-        
-    if stage=='combat' or stage=='combat2':
+
+    #COMBAT LOGIC
+    if stage=='combat':
         if choosecombat:
             if stage=='combat':
-                bosses.append(mantis)
-                if len(bosses)>1:
-                    bosses.pop(0)
-            elif stage=='combat2':
-                bosses.append(grasshopper)
                 if len(bosses)>1:
                     bosses.pop(0)
             skill=False
@@ -1114,7 +1155,7 @@ while running:
         if bosses:
             #ant_spawn_timer-=dt
             if ant_spawn_timer<0:
-                ant_spawn_timer=7
+                ant_spawn_timer=1
                 soldiers.append(SoldierAnt(1500,850,'black',0,0))
                 soldiers.append(SoldierAnt(1500,850,'wood',0,0))
                 soldiers.append(SoldierAnt(1500,850,'dracula',0,0))
@@ -1125,39 +1166,48 @@ while running:
             elif not skill:
                 bosses[0].is_moving=False
             for soldier in soldiers:
-                soldier.move_towards(dt)
+                if not soldier.rangerect.colliderect(bosses[0].rect):
+                    soldier.target_x=bosses[0].x+random.uniform(-255,255)+soldier.range
+                    soldier.target_y=bosses[0].y+random.uniform(-150,150)+soldier.range
+                #Attack
+                if soldier.is_attacking and not skill:
+                    soldier.is_moving=False
+                    soldier.attack_animation_timer+=dt
+                    #Deal damage
+                    if not soldier.attack_hit and soldier.attack_animation_timer>=soldier.attack_animation_speed:
+                        soldier.attack_hit=True
+                        if soldier.type=='wood':
+                            dy=bosses[0].y-soldier.y
+                            dx=bosses[0].x-soldier.x
+                            acids.append(Acid(soldier.x,soldier.y,math.degrees(math.atan2(dy,dx)),soldier.dmg))
+                        else:
+                            if soldier.type=='fireant':
+                                if burn<500:
+                                    burn+=1
+                            bosses[0].hp-=soldier.dmg
+                            if soldier.type=='dracula':
+                                if soldier.hp<soldier.maxhp:
+                                    if soldier.hp+soldier.dmg/2>soldier.maxhp:
+                                        soldier.hp=soldier.maxhp
+                                    else:
+                                        soldier.hp+=soldier.dmg/2
+                    if soldier.attack_animation_timer>=soldier.attack_duration:
+                        soldier.is_attacking=False
+                        soldier.attack_animation_timer=0
+                        soldier.frame_index=0
+                else:
+                    if not soldier.is_attacking:
+                        soldier.move_towards(dt)
+                    soldier.attack_timer+=dt
+
+                    if bosses and soldier.attack_timer>=soldier.attack_speed and soldier.rect.colliderect(bosses[0].rect):
+                        soldier.is_attacking=True
+                        soldier.attack_hit=False
+                        soldier.attack_timer=0
+
                 soldier.update()
             bosses[0].update()
-            if not skill:
-                for soldier in soldiers:
-                    if not soldier.rangerect.colliderect(bosses[0].rect):
-                        soldier.target_x=bosses[0].x+random.uniform(-255,255)+soldier.range
-                        soldier.target_y=bosses[0].y+random.uniform(-150,150)+soldier.range    
-                    else:
-                        if soldier.type=='wood':                
-                            soldier.attack_timer+=dt
-                            if soldier.rect.colliderect(bosses[0].rect):
-                                soldier.target_x=bosses[0].x-255-random.uniform(0,soldier.range)
-                                soldier.target_y=bosses[0].y-255-random.uniform(0,soldier.range)
-                            if soldier.attack_timer>=soldier.attack_speed:
-                                dy=bosses[0].y-soldier.y
-                                dx=bosses[0].x-soldier.x
-                                acids.append(Acid(soldier.x,soldier.y,math.degrees(math.atan2(dy,dx)),soldier.dmg))
-                                soldier.attack_timer=0                            
-                        else:
-                            soldier.attack_timer+=dt
-                            if soldier.attack_timer>=soldier.attack_speed:
-                                soldier.attack_timer=0
-                                if soldier.type=='fireant':
-                                    if burn<500:
-                                        burn+=1
-                                bosses[0].hp-=soldier.dmg
-                                if soldier.type=='dracula':
-                                    if soldier.hp<soldier.maxhp:
-                                        if soldier.hp+soldier.dmg/2>soldier.maxhp:
-                                            soldier.hp=soldier.maxhp
-                                        else:
-                                            soldier.hp+=soldier.dmg/2
+
         if burn>0:
             burn_timer+=dt
             if burn_timer>=burnspeed and bosses:
@@ -1170,9 +1220,14 @@ while running:
             except ValueError:
                 pass
             if stage=='combat':
-                stage='nest'
+                if day==6:combat1_won=True
+                elif day==8:combat2_won=True
+                elif day==10:combat3_won=True
+                elif day==13:combat4_won=True
                 for s in soldiers[:]:
-                    s.hp=s.maxhp                
+                    s.hp=s.maxhp
+                if day==13:
+                    stage='ending'         
         for acid in acids[:]:
             acid.update()
             if not bosses:
@@ -1329,7 +1384,10 @@ while running:
         hatch_icons=[Icon(500,150,'leaf',leaf),Icon(600,150,'honey',honey),Icon(700,150,'seed',apple_seed),Icon(800,150,'blood',blood)]
         barrack_icons=[Icon(500,150,'wheat',blood),Icon(600,150,'salt',blood)]
         barrack_info_icons=[InfoButton(350,220,'wheat'),InfoButton(750,220,'salt')]
-
+        combat1_won=False
+        combat2_won=False
+        combat3_won=False
+        combat4_won=False
 
 
 
@@ -1363,8 +1421,13 @@ while running:
         screen.blit(nest_background,(0,0))
         pygame.draw.rect(screen,(255,200,0),timeline)
         for i in range(0,1201,200):
-            pygame.draw.rect(screen,(255,255,0),(pygame.Rect(150+i,50,50,50)))
-        pygame.draw.rect(screen,(255,0,0),(pygame.Rect(150+day%7*200,50,50,50)))
+            if i ==1200 and week==1:
+                pygame.draw.rect(screen,(255,0,0),(pygame.Rect(150+i,50,50,50)))
+            elif (i ==1200 or i==200 or i==600) and day>6:
+                pygame.draw.rect(screen,(0,0,255),(pygame.Rect(150+i,50,50,50)))
+            else:
+                pygame.draw.rect(screen,(255,255,0),(pygame.Rect(150+i,50,50,50)))    
+        pygame.draw.rect(screen,(0,255,0),(pygame.Rect(150+day%7*200,50,50,50)))
         draw_text(f'Day {day+1}',button_font,(0,0,0),150,5)
         for button in buttons:
             button.draw(screen)
@@ -1470,12 +1533,12 @@ while running:
         screen.blit(black_screen,(0,0))
 
 
-    if stage=='combat'or stage=='combat2':
+    if stage=='combat':
         
         screen.blit(battleground,(0,0))
         
         for boss in bosses:
-            if stage=='combat' or stage=='combat2':
+            if stage=='combat':
                 walks=getattr(boss,'walks',[])
                 attacks1=getattr(boss,'attacks1',[])
                 if boss.is_attacking and attacks1:
@@ -1494,12 +1557,19 @@ while running:
             boss.hbupdate()
             boss.hb()
         for soldier in soldiers:
-            if soldier.is_moving==True:
-                soldier.animation_timer+=dt
-                if soldier.animation_timer>soldier.animation_speed:
-                    soldier.animation_timer=0
-                    soldier.frame_index+=1
-                    soldier.img=pygame.transform.rotate(soldier.images[soldier.frame_index%len(soldier.images)], -soldier.angle)
+            walks=getattr(soldier,'walks',[])
+            attacks=getattr(soldier,'attacks',[])
+            if soldier.is_attacking and attacks:
+                progress=soldier.attack_animation_timer/soldier.attack_duration   #Soldier attack animation
+                index=min(int(progress*len(attacks)),len(attacks)-1)
+                soldier.img=pygame.transform.rotate(attacks[index], -soldier.angle)
+            elif walks:
+                if soldier.is_moving:
+                    soldier.animation_timer+=dt
+                    if soldier.animation_timer>soldier.animation_speed:
+                        soldier.animation_timer=0
+                        soldier.frame_index+=1
+                        soldier.img=pygame.transform.rotate(soldier.walks[soldier.frame_index%len(soldier.walks)], -soldier.angle)
             soldier.draw(screen)
             soldier.hbupdate()
             soldier.hb()
@@ -1509,7 +1579,11 @@ while running:
             acid.update()
             acid.move(dt)
         draw_text('Click H to return if stuck',text_font,(0,0,0),1250,150)
-
+        if stage=='combat' and ((combat1_won and day==6) or (combat2_won and day==8) or (combat3_won and day==10)):
+            pygame.draw.rect(screen,(99,53,42),(300,200,900,550))
+            draw_text('Combat Complete',button_font,(255,255,255),500,250)
+            return_button_combat.draw(screen)
+        
     if stage=='ending':
         screen.fill((0,0,0))
         logo_y-=dt*150
