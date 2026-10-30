@@ -27,7 +27,8 @@ hatch_font=pygame.font.Font(get_resource_path('assets/font.ttf'), 20)
 text_font=pygame.font.Font(get_resource_path('assets/font.ttf'), 15)
 logo=pygame.image.load(get_resource_path('assets/logo.png')).convert_alpha()
 logo=pygame.transform.scale(logo,(45*20,23*20))
-
+white_logo=pygame.image.load(get_resource_path('assets/white_logo.png')).convert_alpha()
+white_logo=pygame.transform.scale(white_logo,(18*30,10*30))
 
 start=pygame.image.load(get_resource_path('assets/title-bg.png')).convert()
 start=pygame.transform.scale(start,(1500,850))
@@ -131,11 +132,22 @@ class TutorialManager:
              'target':"return_button",
              'condition':lambda:stage=='nest',
              'completed':False},
-            {"text":"Everyday you can only collect once. So we need more worker ants to collect more food for the colony.\n Click the Hatch button to hatch more ants.",
+            {"text":"Everyday you can only collect once.\n So we need more worker ants to collect more food for the colony.\n Click the Hatch button to hatch more ants.",
              'target':'hatch_button',
              'condition':lambda:hatching==True,
-             'completed':False}
-]
+             'completed':False},
+            {"text":"One worker ant is not enough to gather food for the entire colony.\n Let's recruit one more. It takes 5 food.\n Click the Worker Ant button to recruit a worker ant.",
+            "target":"worker_button",
+            "condition":lambda:len(workers)==2,
+            "completed":False},
+            {"text":"You can only collect food once a day. Our ants need to rest to work again.\n Click the Sleep button, this will skip a day.",
+            "target":None,
+            "condition":lambda:day==2,
+            "completed":False},
+            {"text":"Now keep collecting food everyday and grow your colony.\n Make sure to get your army ready before day 7.\n Our scout reported that a threat is approaching.",
+             "target":None,
+             "condition":lambda:stage=='collecting',
+             "completed":False}]
         self.current_step=0
         self.is_waiting_to_advance=False
         self.pulse_timer=0
@@ -226,6 +238,9 @@ class TutorialManager:
             elif step['target']=='hatch_button':
                 for button in buttons:
                     if button.function=='hatch':target_rect=button.rect
+            elif step['target']=='worker_button':
+                for button in hatch_buttons:
+                    if button.type=='worker ant':target_rect=button.rect
 
             if target_rect:
                 overlay=pygame.Surface((1500,850),pygame.SRCALPHA)
@@ -409,6 +424,15 @@ class WorkerAnt:
             self.is_moving=True
             self.x+=dx/distance*self.speed*dt
             self.y+=dy/distance*self.speed*dt
+
+        if self.x<(19+10):
+            self.x=19+10
+        if self.y<(24+10):
+            self.y=24+10
+        if self.x>(1500-19-10):
+            self.x=1500-19-10
+        if self.y>(850-24-10):
+            self.y=850-24-10
         target_angle=math.degrees(math.atan2(dy,dx))
         delta=(target_angle-self.angle+180)%360-180
         self.angle += max(-3, min(3, delta))
@@ -719,8 +743,29 @@ class Enemy:
         pygame.draw.rect(screen,red,self.healthbar)
         pygame.draw.rect(screen,black,self.losthealthbar,width=5)
 
+class Credit:
+    def __init__(self,x,y,text,size):
+        self.x=x
+        self.y=y
+        self.font=pygame.font.Font(get_resource_path('assets/font.ttf'), size)
+        self.text=text
+    def update(self,dt):
+        self.y-=dt*150
+        self.img=self.font.render(self.text, True, (255, 255, 255))
+        screen.blit(self.img, (self.x, self.y))
 
-
+credits=[Credit(250,1200,"YOU WIN!",200),
+         Credit(450,1450,"Thanks for playing!",55),
+         Credit(150,1650,"Created by:",55),
+         Credit(650,1750,"Coders:",50),
+         Credit(350,1850,"NNKD-Kevin",50),
+         Credit(850,1850,"Philogamer",50),
+         Credit(575,2050,"Main Artist:",50),
+         Credit(600,2150,"VinceTran",50),
+         Credit(600,2350,"Volunteer:",50),
+         Credit(650,2450,"Gregory",50)
+]
+logo_y=950
 
 
 #Nest Stage        
@@ -822,9 +867,11 @@ while running:
                         worker.target_x=event.pos[0]+random.randint(-20,20)
                         worker.target_y=event.pos[1]+random.randint(-20,20)
                 else:
+                    n=len(workers)
+                    radius=min((20*n),250)
                     for worker in workers:
-                        worker.target_x=event.pos[0]+min(random.randint(-20*len(workers),20*len(workers)),120)
-                        worker.target_y=event.pos[1]+min(random.randint(-20*len(workers),20*len(workers)),120)
+                        worker.target_x=event.pos[0]+random.randint(-radius,radius)
+                        worker.target_y=event.pos[1]+random.randint(-radius,radius)
             if collected:
                 if keys[pygame.K_SPACE]:
                     for food in food_types:
@@ -1039,14 +1086,15 @@ while running:
                             worker.carrying=None
                             gacha=random.randint(1,10)
                             if gacha in [8,9,10]:
-                                if worker.carrying.type=='mosquito': blood+=1
-                                if worker.carrying.type=='bread':wheat+=1
-                                if worker.carrying.type=='apple':apple_seed+=1
-                                if worker.carrying.type=='chips':salt+=1
-                                if worker.carrying.type=='honeycomb':honey+=1
-                                if worker.carrying.type=='leaf':leaf+=1
-                                harvest.append(worker.carrying.type)
-                            worker.carrying=None
+                                if worker.carrying!=None:
+                                    if worker.carrying.type=='mosquito': blood+=1
+                                    if worker.carrying.type=='bread':wheat+=1
+                                    if worker.carrying.type=='apple':apple_seed+=1
+                                    if worker.carrying.type=='chips':salt+=1
+                                    if worker.carrying.type=='honeycomb':honey+=1
+                                    if worker.carrying.type=='leaf':leaf+=1
+                                    harvest.append(worker.carrying.type)
+                                    worker.carrying=None
                     
                     collected=True
                     foods=[]
@@ -1247,6 +1295,7 @@ while running:
         text_surf1=pygame.transform.rotate(text_surf,10)
         text_rect=text_surf1.get_rect(center=(950, 600))
         screen.blit(text_surf1,text_rect)
+        
     if stage=='return':
         time_ms=pygame.time.get_ticks()
         screen.blit(start,(0,0))
@@ -1460,6 +1509,15 @@ while running:
             acid.update()
             acid.move(dt)
         draw_text('Click H to return if stuck',text_font,(0,0,0),1250,150)
+
+    if stage=='ending':
+        screen.fill((0,0,0))
+        logo_y-=dt*150
+        screen.blit(white_logo,(500,logo_y))
+        for credit in credits:
+            credit.update(dt)
+
+    
     #Global Rendering
     black_screen.fill((0,0,0,darkness))
     if menu_on:
