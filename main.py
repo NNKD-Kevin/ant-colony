@@ -664,7 +664,7 @@ class Enemy:
             self.speed=200
             self.hp=3000
             self.maxhp=3000
-            self.dmg=5
+            self.dmg=3
             self.range=100
             self.attack_speed=1
             self.attack_timer=0
@@ -1087,7 +1087,7 @@ while running:
             bosses.append(grasshopper)
             grasshopper.maxhp=12000
             grasshopper.hp=12000
-            grasshopper.dmg=10
+            grasshopper.dmg=5
             bosses[0].x,bosses[0].y=500,0
 
 
@@ -1424,7 +1424,7 @@ while running:
             if i ==1200 and week==1:
                 pygame.draw.rect(screen,(255,0,0),(pygame.Rect(150+i,50,50,50)))
             elif (i ==1200 or i==200 or i==600) and day>6:
-                pygame.draw.rect(screen,(0,0,255),(pygame.Rect(150+i,50,50,50)))
+                pygame.draw.rect(screen,(255,0,0),(pygame.Rect(150+i,50,50,50)))
             else:
                 pygame.draw.rect(screen,(255,255,0),(pygame.Rect(150+i,50,50,50)))    
         pygame.draw.rect(screen,(0,255,0),(pygame.Rect(150+day%7*200,50,50,50)))
