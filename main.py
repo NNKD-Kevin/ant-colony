@@ -4,7 +4,7 @@ import math
 import os
 import sys
 
-
+os.environ['SDL_VIDEO_CENTERED'] = '1' 
 def get_resource_path(relative_path):
     try:
         base_path=sys._MEIPASS
@@ -16,6 +16,7 @@ def get_resource_path(relative_path):
 pygame.init()
 pygame.mixer.init()
 screen = pygame.display.set_mode((1500, 850))
+is_fullscreen=False
 pygame.display.set_caption("Ant Colony")
 stage='start'
 clock=pygame.time.Clock()
@@ -56,6 +57,12 @@ salt_icon=pygame.transform.scale(pygame.image.load(get_resource_path('assets/ico
 honey_icon=pygame.transform.scale(pygame.image.load(get_resource_path('assets/icons/honey.png')).convert_alpha(),(75,75))
 blood_icon=pygame.transform.scale(pygame.image.load(get_resource_path('assets/icons/blood.png')).convert_alpha(),(75,75))
 
+#Combat
+black_icon=pygame.transform.rotate(pygame.transform.scale(pygame.image.load(get_resource_path('assets/icons/black.png')).convert_alpha(),(75,120)),-90)
+leafcutter_icon=pygame.transform.rotate(pygame.transform.scale(pygame.image.load(get_resource_path('assets/icons/leafcutter.png')).convert_alpha(),(75,120)),-90)
+wood_icon=pygame.transform.rotate(pygame.transform.scale(pygame.image.load(get_resource_path('assets/icons/wood.png')).convert_alpha(),(75,120)),-90)
+fire_icon=pygame.transform.rotate(pygame.transform.scale(pygame.image.load(get_resource_path('assets/icons/fire.png')).convert_alpha(),(75,120)),-90)
+dracula_icon=pygame.transform.rotate(pygame.transform.scale(pygame.image.load(get_resource_path('assets/icons/dracula.png')).convert_alpha(),(75,120)),-90)
 
 #Storage
 blood=0
@@ -506,7 +513,7 @@ class SoldierAnt:
         if type=='black':walk_path,attack_path=get_resource_path('assets/black-ant-walking'),get_resource_path('assets/black-ant-attack')
         if type=='wood':walk_path,attack_path=get_resource_path('assets/wood-ant-walking'),get_resource_path('assets/wood-ant-attack')
         if type=='dracula':walk_path,attack_path=get_resource_path('assets/dracula-ant-walking'),get_resource_path('assets/dracula-ant-attack')
-        if type=='fireant':walk_path,attack_path=get_resource_path('assets/fire-ant-walking'),get_resource_path('assets/fire-ant-attack')
+        if type=='fire':walk_path,attack_path=get_resource_path('assets/fire-ant-walking'),get_resource_path('assets/fire-ant-attack')
         if type=='leafcutter':walk_path,attack_path=get_resource_path('assets/leafcutter-ant-walking'),get_resource_path('assets/leafcutter-ant-attack')
         self.walks=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{walk_path}/{f}").convert_alpha(), (19*2,24*2)),-90) for f in os.listdir(walk_path) if f.endswith(".png")]   
         self.attacks=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attack_path}/{f}").convert_alpha(), (19*2,24*2)),-90) for f in os.listdir(attack_path) if f.endswith(".png")]
@@ -537,7 +544,7 @@ class SoldierAnt:
         elif self.type=='wood':
             self.hp=5+hpbuff-dmgbuff
             self.maxhp=5+hpbuff-dmgbuff
-            self.range=200
+            self.range=350
             self.dmg=2+dmgbuff
             self.attack_speed=3
         elif self.type=='dracula':
@@ -546,7 +553,7 @@ class SoldierAnt:
             self.range=0
             self.dmg=2+dmgbuff
             self.attack_speed=1
-        elif self.type=='fireant':
+        elif self.type=='fire':
             self.hp=15+hpbuff-dmgbuff
             self.maxhp=15+hpbuff-dmgbuff
             self.range=0
@@ -812,7 +819,10 @@ food_spawn_timer=0
 calories=0
 running=True
 harvest=[]
+dead_ants=[]
 food_types=['bread','chips','leaf','honeycomb','apple','mosquito']
+ant_types=['black','wood','dracula','fire','leafcutter']
+ant_icons=[black_icon,leafcutter_icon,wood_icon,fire_icon,dracula_icon]
 food_icons=[wheat_icon,salt_icon,leaf_icon,honey_icon,apple_seed_icon,blood_icon]
 #Combat Stage
 mantis=Enemy(0,0,'mantis')
@@ -836,7 +846,13 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-
+        if event.type==pygame.KEYDOWN:
+            if event.key==pygame.K_F11:
+                is_fullscreen= not is_fullscreen
+                if is_fullscreen:
+                    screen = pygame.display.set_mode((1500, 850), pygame.FULLSCREEN|pygame.SCALED)
+                else:
+                    screen = pygame.display.set_mode((1500, 850))
         #Tutorial Click Handling
         if tutorial_on and event.type==pygame.MOUSEBUTTONDOWN:
             mouse_pos=pygame.mouse.get_pos()
@@ -868,6 +884,8 @@ while running:
                 stage='nest'
                 transition=True
                 darkness=255
+        
+        
         mouse_pos=pygame.mouse.get_pos()          
         if stage=='collecting':
             if event.type==pygame.MOUSEBUTTONDOWN and collected==False:
@@ -964,7 +982,7 @@ while running:
                                 if button.type=='fire ant' and calories>=3 and apple_seed>0:
                                     calories-=3
                                     apple_seed-=1
-                                    soldiers.append(SoldierAnt(1500,850,'fireant',wheat,salt))
+                                    soldiers.append(SoldierAnt(1500,850,'fire',wheat,salt))
                                 if button.type=='dracula ant' and calories>=3 and blood>0:
                                     blood-=1
                                     calories-=3
@@ -987,7 +1005,7 @@ while running:
                                     calories-=30
                                     for i in range(10):
                                         apple_seed-=1
-                                        soldiers.append(SoldierAnt(1500,850,'fireant',wheat,salt))
+                                        soldiers.append(SoldierAnt(1500,850,'fire',wheat,salt))
                                 if button.type=='dracula10x' and calories>=30 and blood>=10:
                                     calories-=30
                                     for i in range(10):
@@ -1022,13 +1040,6 @@ while running:
                             icon.hovered=True
                         else:
                             icon.hovered=False
-        if stage=='collecting':
-            if keys[pygame.K_h]:
-                stage='nest'
-                collected=True
-        if stage=='combat' and len(bosses)==0:
-            if keys[pygame.K_h]:
-                stage='nest'
         mouse_pos=pygame.mouse.get_pos()
         if stage=='combat' and len(bosses)==0:
             if return_button_combat.rect.collidepoint(mouse_pos):
@@ -1057,6 +1068,7 @@ while running:
                 soldier.y=1500
             bosses.append(mantis)
             bosses[0].x,bosses[0].y=500,0
+            dead_ants=[]
         elif day==8 and not combat2_won:
             choosecombat=True
             bosses.append(grasshopper)
@@ -1065,6 +1077,7 @@ while running:
                 soldier.x=random.randint(100,1400)
                 soldier.y=1500
             bosses[0].x,bosses[0].y=500,0
+            dead_ants=[]
         elif day==10 and not combat3_won:
             choosecombat=True
             stage='combat'
@@ -1078,6 +1091,7 @@ while running:
             mantis.attack_speed=0.1
             mantis.attack_duration=0.4
             bosses[0].x,bosses[0].y=500,0
+            dead_ants=[]
         elif day==13 and not combat4_won:
             choosecombat=True
             stage='combat'
@@ -1089,6 +1103,7 @@ while running:
             grasshopper.hp=12000
             grasshopper.dmg=5
             bosses[0].x,bosses[0].y=500,0
+            dead_ants=[]
 
 
 
@@ -1153,13 +1168,13 @@ while running:
             skill=False
             choosecombat=False
         if bosses:
-            #ant_spawn_timer-=dt
+            ant_spawn_timer-=dt
             if ant_spawn_timer<0:
                 ant_spawn_timer=1
                 soldiers.append(SoldierAnt(1500,850,'black',0,0))
                 soldiers.append(SoldierAnt(1500,850,'wood',0,0))
                 soldiers.append(SoldierAnt(1500,850,'dracula',0,0))
-                soldiers.append(SoldierAnt(1500,850,'fireant',0,0))
+                soldiers.append(SoldierAnt(1500,850,'fire',0,0))
                 soldiers.append(SoldierAnt(1500,850,'leafcutter',0,0))
             if not bosses[0].is_attacking and not skill:
                 bosses[0].move_towards(dt)
@@ -1181,7 +1196,7 @@ while running:
                             dx=bosses[0].x-soldier.x
                             acids.append(Acid(soldier.x,soldier.y,math.degrees(math.atan2(dy,dx)),soldier.dmg))
                         else:
-                            if soldier.type=='fireant':
+                            if soldier.type=='fire':
                                 if burn<500:
                                     burn+=1
                             bosses[0].hp-=soldier.dmg
@@ -1251,6 +1266,7 @@ while running:
             boss=bosses[0]
             for s in soldiers[:]:
                 if s.hp<=0:
+                    dead_ants.append(s.type)
                     soldiers.remove(s)       #Clear dead soldiers first
             nearest_soldier=min(soldiers,key=lambda s:math.hypot(s.x-bosses[0].x,s.y-bosses[0].y),default=None)
             
@@ -1267,6 +1283,7 @@ while running:
                     if target is not None and target in soldiers:
                         target.hp-=boss.dmg
                         if target.hp <=0:
+                            dead_ants.append(target.type)
                             soldiers.remove(target)
                 if boss.attack_animation_timer>=boss.attack_duration:
                     boss.is_attacking=False
@@ -1294,6 +1311,7 @@ while running:
             boss=bosses[0]                      
             for s in soldiers[:]:
                 if s.hp<=0:
+                    dead_ants.append(s.type)
                     soldiers.remove(s)
             if boss.type=='mantis':
                 skill=False
@@ -1435,7 +1453,7 @@ while running:
         pygame.draw.rect(screen,(0,0,0),(50,120,280,120),width=5)
         screen.blit(food_icon,(60,130))
         draw_text(str(calories),ui_font,(0,0,0),170,130)
-        
+        draw_text("Click F11 to toggle fullscreen",text_font,(0,0,0),1100,10)
         screen.blit(black_screen,(0,0))
         if menu_on:
             pygame.draw.rect(screen,(235,219,200),menu)
@@ -1465,6 +1483,8 @@ while running:
                 for icon in hatch_icons:
                     icon.update(leaf,honey,apple_seed,blood,wheat,salt)
                     icon.draw(screen)
+                draw_text(f"Number of workers: {len(workers)}",text_font,(0,0,0),250,750)
+                draw_text(f"Number of foods: {max_foods}",text_font,(0,0,0),1025,750)
             if storaging:
                 for icon in barrack_icons:
                     icon.update(leaf,honey,apple_seed,blood,wheat,salt)
@@ -1554,6 +1574,7 @@ while running:
                             boss.frame_index+=1
                             boss.img=pygame.transform.rotate(boss.walks[boss.frame_index%len(boss.walks)], -boss.angle)
             boss.draw(screen)
+            pygame.draw.rect(screen,(255,0,0),boss.rect,2)
             boss.hbupdate()
             boss.hb()
         for soldier in soldiers:
@@ -1583,6 +1604,14 @@ while running:
             pygame.draw.rect(screen,(99,53,42),(300,200,900,550))
             draw_text('Combat Complete',button_font,(255,255,255),500,250)
             return_button_combat.draw(screen)
+            n=0
+            draw_text('Casualties:',hatch_font,(255,255,255),400,325)
+            for i in range(5):
+                if ant_types[i] in dead_ants:
+                    screen.blit(ant_icons[i],(475,350+n*75))
+                    draw_text(f'-{dead_ants.count(ant_types[i])}',button_font,(255,255,255),415,350+n*75)
+                    n+=1
+
         
     if stage=='ending':
         screen.fill((0,0,0))
@@ -1605,10 +1634,14 @@ while running:
         darkness=0
     if tutorial_on and stage!='start':
         tutorial_manager.draw(screen)
-        tutorial_ant.draw(screen)
-    
-    pygame.mouse.set_visible(False)
-    screen.blit(cursor_img,mouse_pos)
+        if day<3:
+            tutorial_ant.draw(screen)
+    if 0<mouse_pos[0]<1500 and 0<mouse_pos[1]<850:
+        pygame.mouse.set_visible(False)
+    if 10<mouse_pos[0]<1490 and 10<mouse_pos[1]<840:
+        screen.blit(cursor_img,mouse_pos)
+    else:
+        pygame.mouse.set_visible(True)
 
 
 
