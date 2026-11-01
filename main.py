@@ -948,7 +948,7 @@ while running:
                                 foods.append(Food(random.randint(400,1300),random.randint(200,750),random.randint(0,100)))
                             for worker in workers:
                                 worker.carrying=None
-                        if button.function=='sleep':
+                        if button.function=='sleep' and not transition:
                             day+=1
                             stamina=max_stamina
                             collected=False
@@ -1204,7 +1204,7 @@ while running:
             skill=False
             choosecombat=False
         if bosses:
-            ant_spawn_timer-=dt
+            #ant_spawn_timer-=dt
             if ant_spawn_timer<0:
                 ant_spawn_timer=1
                 soldiers.append(SoldierAnt(1500,850,'black',0,0))
