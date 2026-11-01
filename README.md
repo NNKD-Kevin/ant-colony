@@ -1,4 +1,5 @@
 Tiny Colony 🐜
+
 A simulator and strategy game where you manage an ant colony to collect foods, grow in numbers and defend invasive threats to survive 2 rough weeks of attacks from giant insect species
 
 This is a game I made in the jame gam game jam event of Hack Club with my best friends @philogamer and @vincent058
