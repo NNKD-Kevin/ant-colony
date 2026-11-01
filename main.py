@@ -401,7 +401,7 @@ class WorkerAnt:
         self.target_y=y
         self.img='assets/ant.png'
         self.direction='right'
-        self.speed=200
+        self.speed=250
         self.is_moving=False
         self.carrying=None
         images_path=get_resource_path('assets/worker-ant')
@@ -638,11 +638,11 @@ class Enemy:
             self.attacks1=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attack1_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(attack1_path) if f.endswith(".png")]
             self.rect=pygame.Rect(x-34*5,y-54*5,250,200)   
             self.speed=100
-            self.hp=1700
-            self.maxhp=1700
+            self.hp=4000
+            self.maxhp=4000
             self.dmg=10
             self.range=100
-            self.attack_speed=0.5
+            self.attack_speed=0.4
             self.attack_timer=0
             self.animation_timer=0
             self.animation_speed=0.1
@@ -663,16 +663,18 @@ class Enemy:
         elif type=='grasshopper':
             walks_path=get_resource_path('assets/grasshopper-walking')
             attacks_path=get_resource_path('assets/grasshopper-attack-1')
-            attacks_path2=get_resource_path('assets/grasshopper-attack-2')
+            attacks_path2_charge=get_resource_path('assets/grasshopper-attack-2-charging')
+            attacks_path2_dash=get_resource_path('assets/grasshopper-attack-2-dashing')
             self.walks=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{walks_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(walks_path) if f.endswith(".png")]
             self.attacks1=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attacks_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(attacks_path) if f.endswith(".png")]
-            self.attacks2=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attacks_path2}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(attacks_path2) if f.endswith(".png")]
+            self.attacks2_charge=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attacks_path2_charge}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(attacks_path2_charge) if f.endswith(".png")]
+            self.attacks2_dash=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attacks_path2_dash}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(attacks_path2_dash) if f.endswith(".png")]
             self.img=self.walks[0]
             self.rect=pygame.Rect(x-225,y-150,450,300)
             self.speed=200
-            self.hp=3000
-            self.maxhp=3000
-            self.dmg=5
+            self.hp=15000
+            self.maxhp=15000
+            self.dmg=6
             self.range=100
             self.attack_speed=1
             self.attack_timer=0
@@ -692,13 +694,20 @@ class Enemy:
 
             self.is_skill1_waiting=False
             self.skill1_wait_timer=0
-            self.skill1_wait_duration=1
+            self.skill1_wait_duration=0.75
 
             self.is_flying=False
             self.flight_timer=0
             self.flight_duration=1.5
             self.start_x=0
             self.start_y=0
+
+            self.is_skill2_waiting=False
+            self.skill2_wait_timer=0
+            self.skill2_wait_duration=0.75
+            self.is_dashing=False
+            self.dash_timer=0
+            self.dash_duration=1
         self.untouchable=False
 
         self.angle=0.0
@@ -730,14 +739,14 @@ class Enemy:
             self.x=250     #chỉnh sau này tùy theo size boss
         if self.y<(200):
             self.y=200
-        if self.x>(1500-200): 
-            self.x=1500-200
+        if self.x>1250: 
+            self.x=1250
         if self.type=='mantis':
-            if self.y>850-500:
-                self.y=850-500
+            if self.y>600:
+                self.y=600
         else:
-            if self.y>(850-200):
-                self.y=850-200
+            if self.y>500:
+                self.y=500
         if self.type=='mantis'or self.type=='grasshopper':
             target_angle=math.degrees(math.atan2(dy,dx))
             delta=(target_angle-self.angle+180)%360-180
@@ -1095,13 +1104,11 @@ while running:
                 soldier.x=random.randint(100,1400)
                 soldier.y=1500
             bosses.append(mantis)
-            mantis.hp=1
             bosses[0].x,bosses[0].y=500,0
             dead_ants=[]
         elif day==8 and not combat2_won:
             choosecombat=True
             bosses.append(grasshopper)
-            grasshopper.hp=100000
             stage='combat'
             for soldier in soldiers:
                 soldier.x=random.randint(100,1400)
@@ -1115,11 +1122,11 @@ while running:
                 soldier.x=random.randint(100,1400)
                 soldier.y=1500
             bosses.append(mantis)
-            mantis.maxhp=7500
-            mantis.hp=7500
-            mantis.dmg=15
+            mantis.maxhp=20000
+            mantis.hp=20000
+            mantis.dmg=16
             mantis.attack_speed=0.1
-            mantis.attack_duration=0.4
+            mantis.attack_duration=0.3
             bosses[0].x,bosses[0].y=500,0
             dead_ants=[]
         elif day==13 and not combat4_won:
@@ -1129,9 +1136,9 @@ while running:
                 soldier.x=random.randint(100,1400)
                 soldier.y=1500
             bosses.append(grasshopper)
-            grasshopper.maxhp=20000
-            grasshopper.hp=20000
-            grasshopper.dmg=20
+            grasshopper.maxhp=100000
+            grasshopper.hp=100000
+            grasshopper.dmg=35
             bosses[0].x,bosses[0].y=500,0
             dead_ants=[]
 
@@ -1359,12 +1366,20 @@ while running:
             elif boss.type=='grasshopper':
                 #Jump Skill
                 if chooseskill==1:
-                    #1. Identify Targer
+                    #1. Identify Target
                     if not furthestsoldier:
                         furthest_soldier=max(soldiers,key=lambda s:math.hypot(s.x-bosses[0].x,s.y-bosses[0].y),default=None)                  
                         if furthest_soldier:
                             bosses[0].target_x=furthest_soldier.x
                             bosses[0].target_y=furthest_soldier.y-150
+                        if boss.target_y>500:
+                            boss.target_y=500
+                        if boss.target_y<250:
+                            boss.target_y=250
+                        if boss.target_x<250:
+                            boss.target_x=250
+                        if boss.target_x>1250:
+                            boss.target_x=1250
                         boss.is_skill1_waiting=True
                         boss.skill1_wait_timer=0
                         furthestsoldier=True
@@ -1396,6 +1411,8 @@ while running:
                                 if s.rect.colliderect(boss.rect):
                                     s.hp-=boss.dmg
                 else:
+                    #Dash Skill
+                    #1. Identify Target
                     crowd=0
                     if not furthestsoldier:
                         for s in soldiers[:]:
@@ -1410,12 +1427,35 @@ while running:
                             bosses[0].target_x=34*5
                             bosses[0].target_y=boss.y
                         furthestsoldier=True
-                    boss.skill_grasshopper(dt)
-                    if boss.x==boss.target_x and boss.y==boss.target_y:
-                        skill=False
-                        for s in soldiers[:]:
-                                if s.rect.colliderect(boss.rect):
-                                    s.hp-=boss.dmg
+                        boss.is_skill2_waiting=True
+                        boss.skill2_wait_timer=0
+
+                    #2. Wait
+                    if boss.is_skill2_waiting:
+                        boss.skill2_wait_timer+=dt
+                        boss.is_moving=False
+                        if boss.skill2_wait_timer>=boss.skill2_wait_duration:
+                            boss.is_skill2_waiting=False
+                            boss.is_dashing=True
+                            boss.dash_timer=0
+                            boss.start_x=boss.x
+                            boss.start_y=boss.y
+                            boss.untouchable=True
+
+                    #3. Dash
+                    if boss.is_dashing:
+                        boss.dash_timer+=dt
+                        p=min(1.0,boss.dash_timer/boss.dash_duration)
+                        boss.x=boss.start_x+(boss.target_x-boss.start_x)*p
+                        boss.y=boss.start_y+(boss.target_y-boss.start_y)*p
+                        if boss.dash_timer>=boss.dash_duration:
+                            boss.is_dashing=False
+                            boss.untouchable=False
+                            skill=False
+                            furthestsoldier=False
+                            for s in soldiers[:]:
+                                    if s.rect.colliderect(boss.rect):
+                                        s.hp-=boss.dmg
         if len(soldiers)==0:
             stage='return'
 
@@ -1683,6 +1723,29 @@ while running:
                 draw_x=boss.x-150-(new_width-340)/2
                 draw_y=boss.y-150-(new_height-540)/2
                 screen.blit(boss.img,(draw_x,draw_y))
+            elif boss.type=='grasshopper' and boss.is_skill2_waiting:
+                dash_dx=boss.target_x-boss.x
+                desired_angle=0 if dash_dx>0 else 180
+                delta=(desired_angle-boss.angle+180)%360-180
+                boss.angle+=max(-10,min(10,delta))
+                boss.angle%=360
+
+                boss.skill2_wait_timer+=dt
+                progress=boss.skill2_wait_timer/boss.skill2_wait_duration
+                attacks2_charge=getattr(boss,'attacks2_charge',[])
+                if attacks2_charge:
+                    frame_idx=min(int(progress*3),2)
+                    boss.img=pygame.transform.rotate(attacks2_charge[frame_idx], -boss.angle)
+                boss.draw(screen)
+            elif boss.type=='grasshopper' and boss.is_dashing:
+                boss.dash_timer+=dt
+                progress=boss.dash_timer/boss.dash_duration
+                attacks2_dash=getattr(boss,'attacks2_dash',[])
+                if attacks2_dash:
+                    frame_idx=min(int(progress*3),2)
+                    boss.img=pygame.transform.rotate(attacks2_dash[frame_idx], -boss.angle)
+                boss.draw(screen)
+
             else:
                 if boss.is_attacking and attacks1:
                     progress=boss.attack_animation_timer/boss.attack_duration   #Matis attack animation
