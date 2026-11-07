@@ -3,6 +3,7 @@ import random
 import math
 import os
 import sys
+pygame.mixer.init()
 
 os.environ['SDL_VIDEO_CENTERED'] = '1' 
 def get_resource_path(relative_path):
@@ -12,6 +13,14 @@ def get_resource_path(relative_path):
         base_path=os.path.abspath(".")
     return os.path.join(base_path, relative_path)
 
+#Sounds
+button_click=pygame.mixer.Sound(get_resource_path('assets/sound/button.wav'))
+
+#Music
+ambient_music_path=get_resource_path('assets/sound/ambient_background.wav')
+combat_music_path=get_resource_path('assets/sound/combat_music.wav')
+
+current_music=''
 
 pygame.init()
 pygame.mixer.init()
@@ -84,7 +93,20 @@ red=(255,0,0)
 grey=(127,127,127)
 black=(0,0,0)
 
-
+class SoundMenu:
+    def __init__(self):
+        self.toggled=False
+        self.rect=pygame.Rect(300,200,900,450)
+        self.slider_rect=pygame.Rect(500,300,200,20)
+        self.slider_handle=pygame.Rect(500+100,285,20,50)
+        self.dragged=False
+        self.volume=0.5
+    def draw(self,screen):
+        pygame.draw.rect(screen,(235,219,200),self.rect,0,10)
+        pygame.draw.rect(screen,(255,255,255),self.slider_rect,0,10)
+        pygame.draw.rect(screen,(0,0,0),self.slider_handle,0,10)
+        draw_text(f'Music Volume: {self.volume*100:.0f}%',button_font,(0,0,0),400,220)
+sound_menu=SoundMenu()
 
 class TutorialAnt:
     def __init__(self,x,y):
@@ -904,11 +926,33 @@ while running:
                 stage='nest'
                 transition=True
                 darkness=255
+        if event.type==pygame.KEYDOWN:
+            if event.key==pygame.K_m:
+                if sound_menu.toggled:
+                    sound_menu.toggled=False
+                else:
+                    sound_menu.toggled=True
+
         
-        
-        mouse_pos=pygame.mouse.get_pos()          
+        mouse_pos=pygame.mouse.get_pos()
+        if sound_menu.toggled:
+            if event.type==pygame.MOUSEBUTTONDOWN:
+                if event.button==1:
+                    if sound_menu.slider_rect.collidepoint(mouse_pos):
+                        sound_menu.dragged=True
+            if event.type==pygame.MOUSEBUTTONUP:
+                if event.button==1:
+                    sound_menu.dragged=False
+            if event.type==pygame.MOUSEMOTION:
+                if sound_menu.dragged:
+                    sound_menu.slider_handle.x=max(500,min(mouse_pos[0],680))
+                    sound_menu.volume=(sound_menu.slider_handle.x-500)/200
+                    pygame.mixer.music.set_volume(sound_menu.volume)
+
+
         if stage=='collecting':
             if event.type==pygame.MOUSEBUTTONDOWN and collected==False:
+                button_click.play()
                 if nest.rect.collidepoint(event.pos):
                     for worker in workers:
                         worker.target_x=event.pos[0]+random.randint(-20,20)
@@ -926,6 +970,7 @@ while running:
                 if return_button_collect.rect.collidepoint(mouse_pos):
                     return_button_collect.img=return_button_collect.active_img
                     if event.type==pygame.MOUSEBUTTONDOWN:
+                        button_click.play()
                         harvest=[]
                         stage='nest'
                         transition=True
@@ -944,23 +989,29 @@ while running:
                             stage='collecting'
                             transition=True
                             darkness=255
+                            button_click.play()
                             for i in range(max_foods):
                                 foods.append(Food(random.randint(400,1300),random.randint(200,750),random.randint(0,100)))
                             for worker in workers:
                                 worker.carrying=None
                         if button.function=='sleep' and not transition:
+                            button_click.play()
                             day+=1
                             stamina=max_stamina
                             collected=False
                             transition=True
                             darkness=255
                         if button.function=='storage' and not menu_on:
+                            button_click.play()
                             menu_on=True
                             storaging=True
                             for soldier in soldiers:
                                 soldier.x=soldier.random_x
                                 soldier.y=soldier.random_y
+                                soldier.target_x=soldier.random_x
+                                soldier.target_y=soldier.random_y
                         if button.function=='hatch' and not menu_on:
+                            button_click.play()
                             menu_on=True
                             hatching=True
                 else:
@@ -968,12 +1019,14 @@ while running:
             if menu_on:
                 if event.type==pygame.MOUSEBUTTONDOWN:
                     if not menu.collidepoint(mouse_pos):
+                        button_click.play()
                         menu_on=False
                         storaging=False
                         hatching=False
                 if return_button_nest.rect.collidepoint(mouse_pos):
                     return_button_nest.img=return_button_nest.active_img
                     if event.type==pygame.MOUSEBUTTONDOWN:
+                        button_click.play()
                         menu_on=False
                         storaging=False
                         hatching=False
@@ -985,6 +1038,7 @@ while running:
                             button.color=button.active_color
                             button.border_color=(255,255,255)
                             if event.type==pygame.MOUSEBUTTONDOWN:
+                                button_click.play()
                                 if button.type=='worker ant' and calories>=5:
                                     calories-=5
                                     workers.append(WorkerAnt(100,50))
@@ -1057,6 +1111,7 @@ while running:
                             button.border_color=(255,255,255)
                             button.color=button.active_color
                             if event.type==pygame.MOUSEBUTTONDOWN:
+                                button_click.play()
                                 if button.type=='wheat' and wheat>0:
                                     wheat-=1
                                     hp_buff+=1
@@ -1082,6 +1137,7 @@ while running:
             if return_button_combat.rect.collidepoint(mouse_pos):
                 return_button_combat.img=return_button_combat.active_img
                 if event.type==pygame.MOUSEBUTTONDOWN:
+                    button_click.play()
                     stage='nest'
             else:
                 return_button_combat.img=return_button_combat.passive_img
@@ -1459,7 +1515,14 @@ while running:
         if len(soldiers)==0:
             stage='return'
 
-                                           
+    target_music='combat' if stage=='combat' else 'ambient'
+    if current_music!=target_music:
+        if target_music=='combat':
+            pygame.mixer.music.load(combat_music_path)   
+        else:
+            pygame.mixer.music.load(ambient_music_path)
+        pygame.mixer.music.play(loops=-1) 
+        current_music=target_music                
                     
                 
 
@@ -1566,6 +1629,7 @@ while running:
         screen.blit(food_icon,(60,130))
         draw_text(str(calories),ui_font,(0,0,0),170,130)
         draw_text("Click F11 to toggle fullscreen",text_font,(0,0,0),1100,10)
+        draw_text("Click M to toggle settings",text_font,(0,0,0),700,10)
         screen.blit(black_screen,(0,0))
         if menu_on:
             pygame.draw.rect(screen,(235,219,200),menu)
@@ -1610,9 +1674,15 @@ while running:
                     for soldier in soldiers:
                         gacha_x=soldier.x+random.randint(-200,200)
                         gacha_y=soldier.y+random.randint(-200,200)
-                        if 150<gacha_x<1200 and 300<gacha_y<700:
-                            soldier.target_x=gacha_x
-                            soldier.target_y=gacha_y
+                        soldier.target_x=max(150,min(1200,gacha_x))
+                        soldier.target_y=max(300,min(700,gacha_y))
+                for soldier in soldiers:
+                    if soldier.is_moving:
+                        soldier.animation_timer+=dt
+                        if soldier.animation_timer>soldier.animation_speed:
+                            soldier.animation_timer=0
+                            soldier.frame_index+=1
+                            soldier.img=pygame.transform.rotate(soldier.walks[soldier.frame_index%len(soldier.walks)], -soldier.angle)
                 for button in barrack_buttons:
                     button.draw(screen)
                 for info in barrack_info_icons:
@@ -1729,7 +1799,6 @@ while running:
                 delta=(desired_angle-boss.angle+180)%360-180
                 boss.angle+=max(-10,min(10,delta))
                 boss.angle%=360
-
                 boss.skill2_wait_timer+=dt
                 progress=boss.skill2_wait_timer/boss.skill2_wait_duration
                 attacks2_charge=getattr(boss,'attacks2_charge',[])
@@ -1804,12 +1873,15 @@ while running:
         tutorial_manager.draw(screen)
         if day<3:
             tutorial_ant.draw(screen)
+    if sound_menu.toggled:
+        sound_menu.draw(screen)
     if 0<mouse_pos[0]<1500 and 0<mouse_pos[1]<850:
         pygame.mouse.set_visible(False)
     if 10<mouse_pos[0]<1490 and 10<mouse_pos[1]<840:
         screen.blit(cursor_img,mouse_pos)
     else:
         pygame.mouse.set_visible(True)
+
 
 
 
