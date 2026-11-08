@@ -717,8 +717,11 @@ class Enemy:
         if type=='mantis':
             walking_path=get_resource_path('assets/mantis-walking')
             attack1_path=get_resource_path('assets/mantis-attack-1')
+            attack2_left_path=get_resource_path('assets/mantis-attack-2')
             self.walks=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{walking_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(walking_path) if f.endswith(".png")]
             self.attacks1=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attack1_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(attack1_path) if f.endswith(".png")]
+            self.attacks2_left=[pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attack2_left_path}/{f}").convert_alpha(), (34*10,54*10)),-90) for f in os.listdir(attack2_left_path) if f.endswith(".png")]
+            self.attacks2_right=[pygame.transform.flip(pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attack2_left_path}/{f}").convert_alpha(), (34*10,54*10)),-90),False,True) for f in os.listdir(attack2_left_path) if f.endswith(".png")]
             self.rect=pygame.Rect(x-34*5,y-54*5,250,200)   
             self.speed=100
             self.hp=4000
@@ -739,6 +742,17 @@ class Enemy:
             self.img=self.walks[self.frame_index]
             self.skill_duration=5
             self.skill_activate=0
+            #Claws
+            self.left_claw_offset = pygame.math.Vector2(300, -80)   
+            self.right_claw_offset = pygame.math.Vector2(300, 80)
+            self.is_slashing_left=False
+            self.is_slashing_right=False
+            self.slash_timer=0
+            self.slash_duration=1
+            
+            self.left_claw_pos = pygame.math.Vector2(self.x, self.y)
+            self.right_claw_pos = pygame.math.Vector2(self.x, self.y)
+            self.claw_radius = 125
             
             
             #cái quyết định tọa độ khung và vị trí khung để random chạm cho con kiến, tạm để không, sau này cần scale
@@ -805,6 +819,11 @@ class Enemy:
             screen.blit(self.img, (self.x-225, self.y-50))
     def update(self):
         self.rect=pygame.Rect(self.x-34*5,self.y,350,250)
+    def updateclaws(self):
+        rotation_angle = self.angle
+        self.left_claw_pos = pygame.math.Vector2(self.x, self.y) + self.left_claw_offset.rotate(rotation_angle)
+        self.right_claw_pos = pygame.math.Vector2(self.x, self.y) + self.right_claw_offset.rotate(rotation_angle)
+    
     def move_towards(self,dt):
         dx=self.target_x-self.x
         dy=self.target_y-self.y
@@ -946,4 +965,4 @@ combat4_won=False
 reward_chosen=True
 
 shake_intensity=0
-shake_decay=40
+shake_decay=20

@@ -310,7 +310,6 @@ while running:
                 soldier.x=random.randint(100,1400)
                 soldier.y=1500
             bosses.append(mantis)
-            mantis.hp=1
             bosses[0].x,bosses[0].y=500,0
             dead_ants=[]
         elif day==8 and not combat2_won:
@@ -466,6 +465,7 @@ while running:
 
                 soldier.update()
             bosses[0].update()
+            if bosses[0].type=='mantis':bosses[0].updateclaws()
 
         if burn>0:
             burn_timer+=dt
@@ -543,7 +543,6 @@ while running:
                                 target.hp-=boss.dmg*(1-leafcutter_buff*0.25)
                             else:
                                 target.hp-=boss.dmg
-                            shake_intensity=5
                             if target.hp <=0:
                                 dead_ants.append(target.type)
                                 soldiers.remove(target)
@@ -570,6 +569,11 @@ while running:
                         boss.is_attacking=True
                         boss.attack_hit=False
                         boss.attack_animation_timer=0
+                        boss.skill_activate+=1
+                        if boss.skill_activate>=boss.skill_duration:
+                            skill=True
+                            furthestsoldier=False
+                            boss.skill_activate=0
                     else:
                         boss.skill_activate+=1
                         boss.attack_timer=1
@@ -585,7 +589,30 @@ while running:
                     dead_ants.append(s.type)
                     soldiers.remove(s)
             if boss.type=='mantis':
-                skill=False
+                boss.is_moving=False
+                boss.is_attacking=False
+                if not boss.is_slashing_left and not boss.is_slashing_right:
+                    boss.is_slashing_left=True
+                boss.slash_timer+=dt
+                if boss.slash_timer>=boss.slash_duration and not boss.is_slashing_right:
+                    boss.is_slashing_left=False
+                    boss.slash_timer=0
+                    for soldier in soldiers:
+                        soldier_center=pygame.math.Vector2(soldier.x,soldier.y)
+                        if soldier_center.distance_to(boss.right_claw_pos)<(boss.claw_radius+20):
+                            soldier.hp-=boss.dmg
+                    shake_intensity=15
+                    boss.is_slashing_right=True
+                elif boss.slash_timer>=boss.slash_duration and boss.is_slashing_right:
+                    boss.is_slashing_right=False
+                    boss.slash_timer=0
+                    for soldier in soldiers:
+                        soldier_center=pygame.math.Vector2(soldier.x,soldier.y)
+                        if soldier_center.distance_to(boss.left_claw_pos)<(boss.claw_radius+20):
+                            soldier.hp-=boss.dmg
+                    shake_intensity=25
+                    skill=False
+
             elif boss.type=='grasshopper':
                 #Jump Skill
                 if chooseskill==1:
@@ -699,7 +726,7 @@ while running:
         pygame.mixer.music.play(loops=-1) 
         current_music=target_music                
                     
-                
+
 
 
 
@@ -944,6 +971,22 @@ while running:
             if stage=='combat':
                 walks=getattr(boss,'walks',[])
                 attacks1=getattr(boss,'attacks1',[])
+            if boss.type=='mantis' and boss.is_slashing_left:
+                attacks2_left=getattr(boss,'attacks2_left',[])
+                if attacks2_left:
+                    progress=boss.slash_timer/boss.slash_duration   #Mantis slash animation
+                    index=min(int(progress*len(attacks2_left)),len(attacks2_left)-1)
+                    boss.img=pygame.transform.rotate(attacks2_left[index], -boss.angle)
+            elif boss.type=='mantis' and boss.is_slashing_right:
+                attacks2_right=getattr(boss,'attacks2_right',[])
+                if attacks2_right:
+                    progress=boss.slash_timer/boss.slash_duration   #Mantis slash animation
+                    index=min(int(progress*len(attacks2_right)),len(attacks2_right)-1)
+                    boss.img=pygame.transform.rotate(attacks2_right[index], -boss.angle)
+            elif boss.is_attacking and attacks1 and boss.type=='mantis':
+                progress=boss.attack_animation_timer/boss.attack_duration   #Mantis attack animation
+                index=min(int(progress*len(attacks1)),len(attacks1)-1)
+                boss.img=pygame.transform.rotate(attacks1[index], -boss.angle)
             if boss.type=='grasshopper' and boss.is_skill1_waiting:
                 progress=boss.skill1_wait_timer/boss.skill1_wait_duration   #Grasshoper skill 1 animation
                 index=min(int(progress*len(attacks1)),len(attacks1)-1)
@@ -991,11 +1034,7 @@ while running:
                 boss.draw(screen)
 
             else:
-                if boss.is_attacking and attacks1:
-                    progress=boss.attack_animation_timer/boss.attack_duration   #Matis attack animation
-                    index=min(int(progress*len(attacks1)),len(attacks1)-1)
-                    boss.img=pygame.transform.rotate(attacks1[index], -boss.angle)
-                elif walks:
+                if walks:
                 #Boss walking animation 
                     if boss.is_moving:
                         boss.animation_timer+=dt
@@ -1006,6 +1045,12 @@ while running:
                 boss.draw(screen)
             boss.hbupdate()
             boss.hb()
+            if boss.type=='mantis':
+                # Draw left claw hitbox (Red)
+                pygame.draw.circle(screen, (255, 0, 0), (int(boss.left_claw_pos.x), int(boss.left_claw_pos.y)), boss.claw_radius, 2)
+                # Draw right claw hitbox (Blue)
+                pygame.draw.circle(screen, (0, 0, 255), (int(boss.right_claw_pos.x), int(boss.right_claw_pos.y)), boss.claw_radius, 2)
+                
             pygame.draw.circle(screen,(255,200,9),(300,50),10)
             draw_text(f'{burn}',text_font,(255,255,255),310,40)
         
