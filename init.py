@@ -93,6 +93,59 @@ red=(255,0,0)
 grey=(127,127,127)
 black=(0,0,0)
 
+class Card:
+    def __init__(self,x,y,gacha):
+        self.x=x
+        self.y=y
+        self.gacha=gacha
+        if self.gacha<65:
+            self.index=random.randint(0,3)
+        elif 65<=self.gacha<91:
+            self.index=random.randint(4,7)
+        else:
+            self.index=random.randint(8,12)
+        self.types=[{'rarity':'common','buff':'leaf','name':'Greener Leaves'},
+                    {'rarity':'common','buff':'apple_seed','name':'Sweet Apple'},
+                    {'rarity':'common','buff':'honey','name':'Premium Honey'},
+                    {'rarity':'common','buff':'blood','name':'Fresh Blood'},
+                    {'rarity':'uncommon','buff':'wheat','name':'Whole Grain'},
+                    {'rarity':'uncommon','buff':'salt','name':'Sea Salt'},
+                    {'rarity':'uncommon','buff':'wealth','name':'Wealth Bless'},
+                    {'rarity':'uncommon','buff':'labour','name':'Labour Bless'},
+                    {'rarity':'rare','buff':'wood','name':'Acidic Longevity'},
+                    {'rarity':'rare','buff':'fire','name':'Painful Bites'},
+                    {'rarity':'rare','buff':'leafcutter','name':'Tough Shell'},
+                    {'rarity':'rare','buff':'dracula','name':'Bloodlust'},
+                    {'rarity':'rare','buff':'black','name':'Strength In Numbers'}
+        ]
+        self.rect=pygame.Rect(x,y,300,450)
+        if self.types[self.index]['rarity']=='common':
+            self.active_color=(135,119,100)
+            self.passive_color=(235,219,200)
+        elif self.types[self.index]['rarity']=='uncommon':
+            self.active_color=(100,155,100)
+            self.passive_color=(200,255,200)
+        else:
+            self.active_color=(75,75,155)
+            self.passive_color=(175,175,255)
+        self.toggled=False
+    def draw(self,screen):
+        if self.toggled:
+            pygame.draw.rect(screen,self.active_color,self.rect)
+            draw_text(self.types[self.index]['name'],hatch_font,(255,255,255),self.x+10,self.y+10)
+        else:
+            pygame.draw.rect(screen,self.passive_color,self.rect)
+            draw_text(self.types[self.index]['name'],hatch_font,(0,0,0),self.x+10,self.y+10)
+choosing_cards=[]
+cards=[]
+wheat_buff=0
+apple_seed_buff=0
+salt_buff=0
+honey_buff=0
+leaf_buff=0
+blood_buff=0
+
+
 class SoundMenu:
     def __init__(self):
         self.toggled=False
@@ -694,8 +747,8 @@ class Enemy:
             self.img=self.walks[0]
             self.rect=pygame.Rect(x-225,y-150,450,300)
             self.speed=200
-            self.hp=15000
-            self.maxhp=15000
+            self.hp=10000
+            self.maxhp=10000
             self.dmg=6
             self.range=100
             self.attack_speed=1
@@ -866,6 +919,7 @@ food_types=['bread','chips','leaf','honeycomb','apple','mosquito']
 ant_types=['black','wood','dracula','fire','leafcutter']
 ant_icons=[black_icon,leafcutter_icon,wood_icon,fire_icon,dracula_icon]
 food_icons=[wheat_icon,salt_icon,leaf_icon,honey_icon,apple_seed_icon,blood_icon]
+
 #Combat Stage
 mantis=Enemy(0,0,'mantis')
 grasshopper=Enemy(1000,400,'grasshopper')
@@ -881,3 +935,4 @@ combat1_won=False
 combat2_won=False
 combat3_won=False
 combat4_won=False
+reward_chosen=True

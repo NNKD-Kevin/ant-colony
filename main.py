@@ -120,7 +120,7 @@ while running:
                                 foods.append(Food(random.randint(400,1300),random.randint(200,750),random.randint(0,100)))
                             for worker in workers:
                                 worker.carrying=None
-                        if button.function=='sleep' and not transition:
+                        if button.function=='sleep':
                             button_click.play()
                             day+=1
                             stamina=max_stamina
@@ -260,13 +260,25 @@ while running:
                             icon.hovered=False
         mouse_pos=pygame.mouse.get_pos()
         if stage=='combat' and len(bosses)==0:
-            if return_button_combat.rect.collidepoint(mouse_pos):
-                return_button_combat.img=return_button_combat.active_img
-                if event.type==pygame.MOUSEBUTTONDOWN:
-                    button_click.play()
-                    stage='nest'
+            if reward_chosen:
+                if return_button_combat.rect.collidepoint(mouse_pos):
+                    return_button_combat.img=return_button_combat.active_img
+                    if event.type==pygame.MOUSEBUTTONDOWN:
+                        button_click.play()
+                        stage='nest'
+                else:
+                    return_button_combat.img=return_button_combat.passive_img
             else:
-                return_button_combat.img=return_button_combat.passive_img
+                for card in choosing_cards:
+                    if card.rect.collidepoint(mouse_pos):
+                        card.toggled=True
+                        if event.type==pygame.MOUSEBUTTONDOWN:
+                            button_click.play()
+                            reward_chosen=True
+                            cards.append(card)
+                            choosing_cards=[]
+                    else:
+                        card.toggled=False
 
                     
 
@@ -286,6 +298,7 @@ while running:
                 soldier.x=random.randint(100,1400)
                 soldier.y=1500
             bosses.append(mantis)
+            mantis.hp=1
             bosses[0].x,bosses[0].y=500,0
             dead_ants=[]
         elif day==8 and not combat2_won:
@@ -386,7 +399,7 @@ while running:
             skill=False
             choosecombat=False
         if bosses:
-            #ant_spawn_timer-=dt
+            ant_spawn_timer-=dt
             if ant_spawn_timer<0:
                 ant_spawn_timer=1
                 soldiers.append(SoldierAnt(1500,850,'black',0,0))
@@ -460,6 +473,17 @@ while running:
                 elif day==13:combat4_won=True
                 for s in soldiers[:]:
                     s.hp=s.maxhp
+                cardset=set()
+                processor=[]
+                i=0
+                while len(choosing_cards)<3:
+                    processor.append(Card(100+500*i,200,random.randint(1,100)))
+                    if processor[-1].index not in cardset:
+                        cardset.add(processor[-1].index)
+                        choosing_cards.append(processor[-1])
+                        choosing_cards[-1].x=100+500*i
+                        i+=1
+                reward_chosen=False
                 if day==13:
                     stage='ending'         
         for acid in acids[:]:
@@ -966,7 +990,6 @@ while running:
         if stage=='combat' and ((combat1_won and day==6) or (combat2_won and day==8) or (combat3_won and day==10)):
             pygame.draw.rect(screen,(99,53,42),(300,200,900,550))
             draw_text('Combat Complete',button_font,(255,255,255),500,250)
-            return_button_combat.draw(screen)
             n=0
             draw_text('Casualties:',hatch_font,(255,255,255),400,325)
             for i in range(5):
@@ -974,6 +997,15 @@ while running:
                     screen.blit(ant_icons[i],(475,350+n*75))
                     draw_text(f'-{dead_ants.count(ant_types[i])}',button_font,(255,255,255),415,350+n*75)
                     n+=1
+            if not reward_chosen:
+                overlay=pygame.Surface((1500,850),pygame.SRCALPHA)
+                overlay.fill((0,0,0,150))
+                screen.blit(overlay,(0,0))
+                for card in choosing_cards:
+                    card.draw(screen)
+            if reward_chosen:
+                return_button_combat.draw(screen)
+
 
         
     if stage=='ending':
@@ -985,7 +1017,8 @@ while running:
 
     
     #Global Rendering
-    black_screen.fill((0,0,0,darkness))
+    if reward_chosen:
+        black_screen.fill((0,0,0,darkness))
     if menu_on:
         darkness=125
     elif transition:
