@@ -98,25 +98,28 @@ class Card:
         self.x=x
         self.y=y
         self.gacha=gacha
-        if self.gacha<65:
+        if 0<self.gacha<51:
             self.index=random.randint(0,3)
-        elif 65<=self.gacha<91:
+        elif 50<self.gacha<81:
             self.index=random.randint(4,7)
-        else:
+        elif 80<self.gacha<96:
             self.index=random.randint(8,12)
-        self.types=[{'rarity':'common','buff':'leaf','name':'Greener Leaves'},
-                    {'rarity':'common','buff':'apple_seed','name':'Sweet Apple'},
-                    {'rarity':'common','buff':'honey','name':'Premium Honey'},
-                    {'rarity':'common','buff':'blood','name':'Fresh Blood'},
-                    {'rarity':'uncommon','buff':'wheat','name':'Whole Grain'},
-                    {'rarity':'uncommon','buff':'salt','name':'Sea Salt'},
-                    {'rarity':'uncommon','buff':'wealth','name':'Wealth Bless'},
-                    {'rarity':'uncommon','buff':'labour','name':'Labour Bless'},
-                    {'rarity':'rare','buff':'wood','name':'Acidic Longevity'},
-                    {'rarity':'rare','buff':'fire','name':'Painful Bites'},
-                    {'rarity':'rare','buff':'leafcutter','name':'Tough Shell'},
-                    {'rarity':'rare','buff':'dracula','name':'Bloodlust'},
-                    {'rarity':'rare','buff':'black','name':'Strength In Numbers'}
+        else:
+            self.index=13
+        self.types=[{'rarity':'common','buff':'leaf','name':'Greener Leaves','description':'Gain 2 extra leaf essence \nwhenever you get a \nleaf essence'}, #1
+                    {'rarity':'common','buff':'apple_seed','name':'Sweet Apple','description':'Gain 2 extra apple seed \nwhenever you get an\n apple seed'}, #2
+                    {'rarity':'common','buff':'honey','name':'Premium Honey','description':'Gain 2 extra honey whenever \nyou get honey'}, #3
+                    {'rarity':'common','buff':'blood','name':'Fresh Blood','description':'Gain 2 extra blood whenever \nyou get blood'},  #4
+                    {'rarity':'uncommon','buff':'wheat','name':'Whole Grain','description':'Gain 2 extra wheat whenever \nyou get wheat'},  #5
+                    {'rarity':'uncommon','buff':'salt','name':'Sea Salt','description':'Gain 2 extra salt whenever \nyou get salt'},   #6
+                    {'rarity':'uncommon','buff':'wealth','name':'Wealth Bless','description':'Immediately gain \n10 wheats and 10 salts'},   #7
+                    {'rarity':'uncommon','buff':'labour','name':'Labour Bless','description':'Immediately gain \n5 scout ants\n and 5 worker ants.'},   #8
+                    {'rarity':'rare','buff':'wood','name':'Acidic Range','description':'Wood Ant range \nis increased by 80%'},       #9
+                    {'rarity':'rare','buff':'fire','name':'Painful Bites','description':'Fire Ant gives 2 more\nstack of burn per hit'},       #10
+                    {'rarity':'rare','buff':'leafcutter','name':'Tough Shell','description':f'Leafcutter Ant\nreceives 25% less damage'},    #11
+                    {'rarity':'rare','buff':'dracula','name':'Bloodlust','description':f'Dracula Ant leeches extra 25% \nof its damage per bite'},       #12
+                    {'rarity':'rare','buff':'black','name':'Strength In Numbers','description':f'Get 3 extra black ants \nwhen buying 10x black ants'},  #13
+                    {'rarity':'epic','buff':'harvest','name':'Harvest Blessing','description':f'Food crumbs have 30% \nmore chance to drop \nits essence'} #14
         ]
         self.rect=pygame.Rect(x,y,300,450)
         if self.types[self.index]['rarity']=='common':
@@ -125,25 +128,29 @@ class Card:
         elif self.types[self.index]['rarity']=='uncommon':
             self.active_color=(100,155,100)
             self.passive_color=(200,255,200)
-        else:
+        elif self.types[self.index]['rarity']=='rare':
             self.active_color=(75,75,155)
             self.passive_color=(175,175,255)
+        else:
+            self.active_color=(155,75,155)
+            self.passive_color=(255,175,255)
         self.toggled=False
     def draw(self,screen):
         if self.toggled:
             pygame.draw.rect(screen,self.active_color,self.rect)
             draw_text(self.types[self.index]['name'],hatch_font,(255,255,255),self.x+10,self.y+10)
+            draw_text(self.types[self.index]['description'],text_font,(255,255,255),self.x+10,self.y+60)
         else:
             pygame.draw.rect(screen,self.passive_color,self.rect)
             draw_text(self.types[self.index]['name'],hatch_font,(0,0,0),self.x+10,self.y+10)
+            draw_text(self.types[self.index]['description'],text_font,(0,0,0),self.x+10,self.y+60)
 choosing_cards=[]
 cards=[]
-wheat_buff=0
-apple_seed_buff=0
-salt_buff=0
-honey_buff=0
-leaf_buff=0
-blood_buff=0
+wood_buff=0
+fire_buff=0
+leafcutter_buff=0
+dracula_buff=0
+black_buff=0
 
 
 class SoundMenu:
@@ -580,7 +587,7 @@ class Nest:
 
 #Combat Stage
 class SoldierAnt:
-    def __init__(self,x,y,type,hpbuff,dmgbuff):
+    def __init__(self,x,y,type,hpbuff,dmgbuff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff):
         self.x=x
         self.y=y
         self.target_x=x
@@ -619,7 +626,7 @@ class SoldierAnt:
         elif self.type=='wood':
             self.hp=5+hpbuff-dmgbuff
             self.maxhp=5+hpbuff-dmgbuff
-            self.range=350
+            self.range=350+250*wood_buff
             self.dmg=2+dmgbuff
             self.attack_speed=3
         elif self.type=='dracula':
@@ -629,17 +636,18 @@ class SoldierAnt:
             self.dmg=2+dmgbuff
             self.attack_speed=1
         elif self.type=='fire':
-            self.hp=15+hpbuff-dmgbuff
-            self.maxhp=15+hpbuff-dmgbuff
+            self.hp=10+hpbuff-dmgbuff
+            self.maxhp=10+hpbuff-dmgbuff
             self.range=0
+            self.fire=1+2*fire_buff
             self.dmg=0+dmgbuff
             self.attack_speed=2
         elif self.type=='leafcutter':
-            self.hp=15+hpbuff-dmgbuff
-            self.maxhp=15+hpbuff-dmgbuff
+            self.hp=25+hpbuff-dmgbuff
+            self.maxhp=25+hpbuff-dmgbuff
             self.range=0
             self.dmg=2+dmgbuff
-            self.attack_speed=1    
+            self.attack_speed=1   
         self.rangerect=pygame.Rect(self.x-19-self.range/2,self.y-24-self.range/2,38+self.range,48+self.range)
         self.random_x=random.randint(150,1200)
         self.random_y=random.randint(300,700)
@@ -924,7 +932,7 @@ food_icons=[wheat_icon,salt_icon,leaf_icon,honey_icon,apple_seed_icon,blood_icon
 mantis=Enemy(0,0,'mantis')
 grasshopper=Enemy(1000,400,'grasshopper')
 bosses=[mantis]
-soldiers=[SoldierAnt(1500,700,'black',0,0)]
+soldiers=[SoldierAnt(1500,700,'black',0,0,0,0,0,0,0)]
 ant_spawn_timer=0
 acids=[]
 choosecombat=False
@@ -936,3 +944,6 @@ combat2_won=False
 combat3_won=False
 combat4_won=False
 reward_chosen=True
+
+shake_intensity=0
+shake_decay=40

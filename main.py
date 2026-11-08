@@ -173,23 +173,23 @@ while running:
                                     max_foods+=1
                                 if button.type=='soldier ant' and calories>=3:
                                     calories-=3
-                                    soldiers.append(SoldierAnt(1500,850,'black',hp_buff,power_buff))
+                                    soldiers.append(SoldierAnt(1500,850,'black',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
                                 if button.type=='leafcutter ant' and calories>=3 and leaf>0:
                                     calories-=3
                                     leaf-=1
-                                    soldiers.append(SoldierAnt(1500,850,'leafcutter',hp_buff,power_buff))
+                                    soldiers.append(SoldierAnt(1500,850,'leafcutter',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
                                 if button.type=='wood ant' and calories>=3 and honey>0:
                                     calories-=3
                                     honey-=1
-                                    soldiers.append(SoldierAnt(1500,850,'wood',hp_buff,power_buff))
+                                    soldiers.append(SoldierAnt(1500,850,'wood',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
                                 if button.type=='fire ant' and calories>=3 and apple_seed>0:
                                     calories-=3
                                     apple_seed-=1
-                                    soldiers.append(SoldierAnt(1500,850,'fire',hp_buff,power_buff))
+                                    soldiers.append(SoldierAnt(1500,850,'fire',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
                                 if button.type=='dracula ant' and calories>=3 and blood>0:
                                     blood-=1
                                     calories-=3
-                                    soldiers.append(SoldierAnt(1500,850,'dracula',hp_buff,power_buff))
+                                    soldiers.append(SoldierAnt(1500,850,'dracula',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
                                 if button.type=='worker10x' and calories>=50:
                                     calories-=50
                                     for i in range(10):
@@ -200,28 +200,28 @@ while running:
                                         max_foods+=1
                                 if button.type=='soldier10x' and calories>=30:
                                     calories-=30
-                                    for i in range(10):
-                                        soldiers.append(SoldierAnt(1500,850,'black',hp_buff,power_buff))
+                                    for i in range(10+black_buff*3):
+                                        soldiers.append(SoldierAnt(1500,850,'black',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
                                 if button.type=='leafcutter10x' and calories>=30 and leaf>=10:
                                     calories-=30
                                     for i in range(10):
                                         leaf-=1
-                                        soldiers.append(SoldierAnt(1500,850,'leafcutter',hp_buff,power_buff))
+                                        soldiers.append(SoldierAnt(1500,850,'leafcutter',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
                                 if button.type=='wood10x' and calories>=30 and honey>=10:
                                     calories-=30
                                     for i in range(10):
                                         honey-=1
-                                        soldiers.append(SoldierAnt(1500,850,'wood',hp_buff,power_buff))
+                                        soldiers.append(SoldierAnt(1500,850,'wood',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
                                 if button.type=='fire10x' and calories>=30 and apple_seed>=10:
                                     calories-=30
                                     for i in range(10):
                                         apple_seed-=1
-                                        soldiers.append(SoldierAnt(1500,850,'fire',hp_buff,power_buff))
+                                        soldiers.append(SoldierAnt(1500,850,'fire',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
                                 if button.type=='dracula10x' and calories>=30 and blood>=10:
                                     calories-=30
                                     for i in range(10):
                                         blood-=1
-                                        soldiers.append(SoldierAnt(1500,850,'dracula',hp_buff,power_buff))
+                                        soldiers.append(SoldierAnt(1500,850,'dracula',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
                             
                         else:
                             button.color=button.passive_color
@@ -276,6 +276,18 @@ while running:
                             button_click.play()
                             reward_chosen=True
                             cards.append(card)
+                            if card.index==6:
+                                wheat+=10
+                                salt+=10
+                            elif card.index==7:
+                                max_foods+=5
+                                for i in range(5):
+                                    workers.append(WorkerAnt(100,50))
+                            elif card.index==8:wood_buff+=1
+                            elif card.index==9:fire_buff+=1
+                            elif card.index==10:leafcutter_buff+=1
+                            elif card.index==11:dracula_buff+=1
+                            elif card.index==12:black_buff+=1 
                             choosing_cards=[]
                     else:
                         card.toggled=False
@@ -317,8 +329,8 @@ while running:
                 soldier.x=random.randint(100,1400)
                 soldier.y=1500
             bosses.append(mantis)
-            mantis.maxhp=20000
-            mantis.hp=20000
+            mantis.maxhp=50000
+            mantis.hp=50000
             mantis.dmg=16
             mantis.attack_speed=0.1
             mantis.attack_duration=0.3
@@ -331,9 +343,9 @@ while running:
                 soldier.x=random.randint(100,1400)
                 soldier.y=1500
             bosses.append(grasshopper)
-            grasshopper.maxhp=100000
-            grasshopper.hp=100000
-            grasshopper.dmg=35
+            grasshopper.maxhp=500000
+            grasshopper.hp=500000
+            grasshopper.dmg=50
             bosses[0].x,bosses[0].y=500,0
             dead_ants=[]
 
@@ -359,14 +371,14 @@ while running:
                 calories+=2
                 if worker.carrying.type=='chips':calories+=1
                 stamina-=1/len(workers)
-                gacha=random.randint(1,10)
-                if gacha in [8,9,10]:
-                    if worker.carrying.type=='mosquito': blood+=1
-                    if worker.carrying.type=='bread':wheat+=1
-                    if worker.carrying.type=='apple':apple_seed+=1
-                    if worker.carrying.type=='chips':salt+=1
-                    if worker.carrying.type=='honeycomb':honey+=1
-                    if worker.carrying.type=='leaf':leaf+=1
+                gacha=random.randint(1,10)+3*cards.count(card for card in cards if card.index==13)
+                if gacha>7:
+                    if worker.carrying.type=='mosquito': blood+=1+2*cards.count(card for card in cards if card.index==3)
+                    if worker.carrying.type=='bread':wheat+=1+2*cards.count(card for card in cards if card.index==4)
+                    if worker.carrying.type=='apple':apple_seed+=1+2*cards.count(card for card in cards if card.index==1)
+                    if worker.carrying.type=='chips':salt+=1+2*cards.count(card for card in cards if card.index==5)
+                    if worker.carrying.type=='honeycomb':honey+=1+2*cards.count(card for card in cards if card.index==2)
+                    if worker.carrying.type=='leaf':leaf+=1+2*cards.count(card for card in cards if card.index==0)
                     harvest.append(worker.carrying.type)
                 worker.carrying=None
 
@@ -402,11 +414,11 @@ while running:
             ant_spawn_timer-=dt
             if ant_spawn_timer<0:
                 ant_spawn_timer=1
-                soldiers.append(SoldierAnt(1500,850,'black',0,0))
-                soldiers.append(SoldierAnt(1500,850,'wood',0,0))
-                soldiers.append(SoldierAnt(1500,850,'dracula',0,0))
-                soldiers.append(SoldierAnt(1500,850,'fire',0,0))
-                soldiers.append(SoldierAnt(1500,850,'leafcutter',0,0))
+                soldiers.append(SoldierAnt(1500,850,'black',0,0,0,0,0,0,0))
+                soldiers.append(SoldierAnt(1500,850,'wood',0,0,0,0,0,0,0))
+                soldiers.append(SoldierAnt(1500,850,'dracula',0,0,0,0,0,0,0))
+                soldiers.append(SoldierAnt(1500,850,'fire',0,0,0,0,0,0,0))
+                soldiers.append(SoldierAnt(1500,850,'leafcutter',0,0,0,0,0,0,0))
             if not bosses[0].is_attacking and not skill:
                 bosses[0].move_towards(dt)
             elif not skill:
@@ -428,8 +440,8 @@ while running:
                             acids.append(Acid(soldier.x,soldier.y,math.degrees(math.atan2(dy,dx)),soldier.dmg))
                         else:
                             if soldier.type=='fire':
-                                if burn<500:
-                                    burn+=1
+                                if burn<5000:
+                                    burn+=soldier.fire
                             if not bosses[0].untouchable:
                                 bosses[0].hp-=soldier.dmg
                             if soldier.type=='dracula':
@@ -437,7 +449,7 @@ while running:
                                     if soldier.hp+soldier.dmg/2>soldier.maxhp:
                                         soldier.hp=soldier.maxhp
                                     else:
-                                        soldier.hp+=soldier.dmg/2
+                                        soldier.hp+=soldier.dmg*(0.5+0.25*dracula_buff)
                     if soldier.attack_animation_timer>=soldier.attack_duration:
                         soldier.is_attacking=False
                         soldier.attack_animation_timer=0
@@ -458,8 +470,9 @@ while running:
         if burn>0:
             burn_timer+=dt
             if burn_timer>=burnspeed and bosses:
-                bosses[0].hp-=1
+                bosses[0].hp-=burn
                 burn_timer=0
+                burn-=1
                                        
         if bosses and bosses[0].hp<=0:
             try:
@@ -526,7 +539,11 @@ while running:
                     target=boss.attack_target
                     if target is not None and target in soldiers:
                         if boss.type!='grasshopper':
-                            target.hp-=boss.dmg
+                            if target.type=='leafcutter' and leafcutter_buff>0:
+                                target.hp-=boss.dmg*(1-leafcutter_buff*0.25)
+                            else:
+                                target.hp-=boss.dmg
+                            shake_intensity=5
                             if target.hp <=0:
                                 dead_ants.append(target.type)
                                 soldiers.remove(target)
@@ -613,9 +630,13 @@ while running:
                             boss.untouchable=False
                             skill=False
                             furthestsoldier=False
+                            shake_intensity=max(50,shake_intensity)
                             for s in soldiers[:]:
                                 if s.rect.colliderect(boss.rect):
-                                    s.hp-=boss.dmg
+                                    if s.type=='leafcutter' and leafcutter_buff>0:
+                                        s.hp-=boss.dmg*(1-leafcutter_buff*0.25)
+                                    else:
+                                        s.hp-=boss.dmg
                 else:
                     #Dash Skill
                     #1. Identify Target
@@ -659,9 +680,13 @@ while running:
                             boss.untouchable=False
                             skill=False
                             furthestsoldier=False
+                            shake_intensity=50
                             for s in soldiers[:]:
                                     if s.rect.colliderect(boss.rect):
-                                        s.hp-=boss.dmg
+                                        if s.type=='leafcutter' and leafcutter_buff>0:
+                                            s.hp-=boss.dmg*(1-leafcutter_buff*0.25)
+                                        else:
+                                            s.hp-=boss.dmg
         if len(soldiers)==0:
             stage='return'
 
@@ -752,7 +777,7 @@ while running:
         mantis=Enemy(0,0,'mantis')
         grasshopper=Enemy(1000,400,'grasshopper')
         bosses=[mantis]
-        soldiers=[SoldierAnt(100,50,'black',0,0)]
+        soldiers=[SoldierAnt(100,50,'black',0,0,0,0,0,0,0)]
         ant_spawn_timer=0
         acids=[]
         choosecombat=False
@@ -979,9 +1004,10 @@ while running:
                             boss.frame_index+=1
                             boss.img=pygame.transform.rotate(boss.walks[boss.frame_index%len(boss.walks)], -boss.angle)
                 boss.draw(screen)
-            pygame.draw.rect(screen,(255,0,0),boss.rect,2)
             boss.hbupdate()
             boss.hb()
+            pygame.draw.circle(screen,(255,200,9),(300,50),10)
+            draw_text(f'{burn}',text_font,(255,255,255),310,40)
         
         for acid in acids:
             acid.draw(screen)
@@ -1040,6 +1066,17 @@ while running:
         screen.blit(cursor_img,mouse_pos)
     else:
         pygame.mouse.set_visible(True)
+    if shake_intensity>0:
+        shake_x=random.uniform(-shake_intensity,shake_intensity)
+        shake_y=random.uniform(-shake_intensity,shake_intensity)
+        frame=screen.copy()
+        screen.fill((0,0,0))
+        screen.blit(frame,(shake_x,shake_y))
+
+        shake_intensity-=shake_decay*dt
+        if shake_intensity<0:
+            shake_intensity=0
+
 
 
         
