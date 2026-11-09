@@ -15,6 +15,11 @@ def get_resource_path(relative_path):
 
 #Sounds
 button_click=pygame.mixer.Sound(get_resource_path('assets/sound/button.wav'))
+jump=pygame.mixer.Sound(get_resource_path('assets/sound/jump.wav'))
+landing=pygame.mixer.Sound(get_resource_path('assets/sound/landing.wav'))
+pop=pygame.mixer.Sound(get_resource_path('assets/sound/pop.wav'))
+swing1=pygame.mixer.Sound(get_resource_path('assets/sound/swing1.mp3'))
+swing2=pygame.mixer.Sound(get_resource_path('assets/sound/swing2.mp3'))
 
 #Music
 ambient_music_path=get_resource_path('assets/sound/ambient_background.wav')
@@ -231,7 +236,7 @@ class TutorialManager:
             "completed":False},
             {"text":"You can only collect food once a day. Our ants need to rest to work again.\n Click the Sleep button, this will skip a day.",
             "target":None,
-            "condition":lambda:day==2,
+            "condition":lambda:day>=2,
             "completed":False},
             {"text":"Now keep collecting food everyday and grow your colony.\n Make sure to get your army ready before day 7.\n Our scout reported that a threat is approaching.",
              "target":None,
@@ -340,8 +345,16 @@ class TutorialManager:
 tutorial_manager=TutorialManager()
 tutorial_on=True
 
-
-
+class Notification:
+    def __init__(self,x,y,text,color):
+        self.x=x
+        self.y=y
+        self.text=text
+        self.color=color
+    def update(self,dt):
+        self.y-=dt*150
+        draw_text(self.text,hatch_font,self.color,self.x,self.y)
+notifications=[]
 
 class Button:
     def __init__(self, x, y, function):
@@ -905,7 +918,7 @@ logo_y=950
 #Nest Stage        
 timeline=pygame.Rect(150,50,1200,30)
 buttons=[Button(950,150,'collection'),Button(400,580,'hatch'),Button(400,280,'storage'),Button(1000,600,'sleep')]
-hatch_buttons=[HatchButton(200,450,'worker ant'),HatchButton(600,450,'soldier ant'),HatchButton(1000,450,'scout ant'),HatchButton(600,515,'leafcutter ant'),HatchButton(600,580,'wood ant'),HatchButton(600,645,'fire ant'),HatchButton(600,710,'dracula ant'),
+hatch_buttons=[HatchButton(200,450,'worker ant'),HatchButton(600,450,'black ant'),HatchButton(1000,450,'scout ant'),HatchButton(600,515,'leafcutter ant'),HatchButton(600,580,'wood ant'),HatchButton(600,645,'fire ant'),HatchButton(600,710,'dracula ant'),
                HatchButton(475,450,'worker10x'),HatchButton(1275,450,'scout10x'),HatchButton(875,450,'soldier10x'),HatchButton(875,515,'leafcutter10x'),HatchButton(875,580,'wood10x'),HatchButton(875,645,'fire10x'),HatchButton(875,710,'dracula10x')]
 hatching=False
 storaging=False

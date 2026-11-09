@@ -24,7 +24,7 @@ while running:
         #Tutorial Click Handling
         if tutorial_on and event.type==pygame.MOUSEBUTTONDOWN:
             mouse_pos=pygame.mouse.get_pos()
-            rect=(50,650,1400,150)
+            rect=(250,675,1200,150)
             show_rect=(1350,780,140,40)
 
             if tutorial_manager.is_hidden:
@@ -120,6 +120,8 @@ while running:
                                 foods.append(Food(random.randint(400,1300),random.randint(200,750),random.randint(0,100)))
                             for worker in workers:
                                 worker.carrying=None
+                                worker.x=nest.x+random.randint(-50,50)
+                                worker.y=nest.y+random.randint(-50,50)
                         if button.function=='sleep':
                             button_click.play()
                             day+=1
@@ -168,61 +170,76 @@ while running:
                                 if button.type=='worker ant' and calories>=5:
                                     calories-=5
                                     workers.append(WorkerAnt(100,50))
-                                if button.type=='scout ant' and calories>=5:
+                                    notifications.append(Notification(300,100,'Successfully hatched a worker ant',(0,255,0)))
+                                elif button.type=='scout ant' and calories>=5:
                                     calories-=5
                                     max_foods+=1
-                                if button.type=='soldier ant' and calories>=3:
+                                    notifications.append(Notification(300,100,'Successfully hatched a scout ant',(0,255,0)))
+                                elif button.type=='soldier ant' and calories>=3:
                                     calories-=3
                                     soldiers.append(SoldierAnt(1500,850,'black',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
-                                if button.type=='leafcutter ant' and calories>=3 and leaf>0:
+                                    notifications.append(Notification(300,100,'Successfully hatched a black ant',(0,255,0)))
+                                elif button.type=='leafcutter ant' and calories>=3 and leaf>0:
                                     calories-=3
                                     leaf-=1
                                     soldiers.append(SoldierAnt(1500,850,'leafcutter',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
-                                if button.type=='wood ant' and calories>=3 and honey>0:
+                                    notifications.append(Notification(300,100,'Successfully hatched a leafcutter ant',(0,255,0)))
+                                elif button.type=='wood ant' and calories>=3 and honey>0:
                                     calories-=3
                                     honey-=1
                                     soldiers.append(SoldierAnt(1500,850,'wood',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
-                                if button.type=='fire ant' and calories>=3 and apple_seed>0:
+                                    notifications.append(Notification(300,100,'Successfully hatched a wood ant',(0,255,0)))
+                                elif button.type=='fire ant' and calories>=3 and apple_seed>0:
                                     calories-=3
                                     apple_seed-=1
                                     soldiers.append(SoldierAnt(1500,850,'fire',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
-                                if button.type=='dracula ant' and calories>=3 and blood>0:
+                                    notifications.append(Notification(300,100,'Successfully hatched a fire ant',(0,255,0)))
+                                elif button.type=='dracula ant' and calories>=3 and blood>0:
                                     blood-=1
                                     calories-=3
                                     soldiers.append(SoldierAnt(1500,850,'dracula',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
-                                if button.type=='worker10x' and calories>=50:
+                                    notifications.append(Notification(300,100,'Successfully hatched a dracula ant',(0,255,0)))
+                                elif button.type=='worker10x' and calories>=50:
                                     calories-=50
                                     for i in range(10):
                                         workers.append(WorkerAnt(100,50))
-                                if button.type=='scout10x' and calories>=50:
+                                    notifications.append(Notification(300,100,'Successfully hatched 10 worker ants',(0,255,0)))
+                                elif button.type=='scout10x' and calories>=50:
                                     calories-=50
                                     for i in range(10):
                                         max_foods+=1
-                                if button.type=='soldier10x' and calories>=30:
+                                    notifications.append(Notification(300,100,'Successfully hatched 10 scout ants',(0,255,0)))
+                                elif button.type=='soldier10x' and calories>=30:
                                     calories-=30
                                     for i in range(10+black_buff*3):
                                         soldiers.append(SoldierAnt(1500,850,'black',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
-                                if button.type=='leafcutter10x' and calories>=30 and leaf>=10:
+                                    notifications.append(Notification(300,100,'Successfully hatched 10 black ants',(0,255,0)))
+                                elif button.type=='leafcutter10x' and calories>=30 and leaf>=10:
                                     calories-=30
                                     for i in range(10):
                                         leaf-=1
                                         soldiers.append(SoldierAnt(1500,850,'leafcutter',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
-                                if button.type=='wood10x' and calories>=30 and honey>=10:
+                                    notifications.append(Notification(300,100,'Successfully hatched 10 leafcutter ants',(0,255,0)))
+                                elif button.type=='wood10x' and calories>=30 and honey>=10:
                                     calories-=30
                                     for i in range(10):
                                         honey-=1
                                         soldiers.append(SoldierAnt(1500,850,'wood',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
-                                if button.type=='fire10x' and calories>=30 and apple_seed>=10:
+                                    notifications.append(Notification(300,100,'Successfully hatched 10 wood ants',(0,255,0)))
+                                elif button.type=='fire10x' and calories>=30 and apple_seed>=10:
                                     calories-=30
                                     for i in range(10):
                                         apple_seed-=1
                                         soldiers.append(SoldierAnt(1500,850,'fire',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
-                                if button.type=='dracula10x' and calories>=30 and blood>=10:
+                                    notifications.append(Notification(300,100,'Successfully hatched 10 fire ants',(0,255,0)))
+                                elif button.type=='dracula10x' and calories>=30 and blood>=10:
                                     calories-=30
                                     for i in range(10):
                                         blood-=1
                                         soldiers.append(SoldierAnt(1500,850,'dracula',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
-                            
+                                    notifications.append(Notification(300,100,'Successfully hatched 10 dracula ants',(0,255,0)))
+                                else:
+                                    notifications.append(Notification(600,100,'Insufficient food!',(255,0,0)))
                         else:
                             button.color=button.passive_color
                             button.border_color=(0,0,0)
@@ -360,6 +377,7 @@ while running:
                 if worker.rect.colliderect(food.rect) and worker.carrying == None:
                     if food.count < 5:
                         food.count += 1
+                        pop.play()
                         food.img = food.images[food.count]
                         worker.carrying = food
                     elif food.count>=4:
@@ -368,6 +386,7 @@ while running:
                 
             if worker.rect.colliderect(nest.rect) and worker.carrying:
                 calories+=2
+                pop.play()
                 if worker.carrying.type=='chips':calories+=1
                 stamina-=1/len(workers)
                 gacha=random.randint(1,10)+3*cards.count(card for card in cards if card.index==13)
@@ -536,6 +555,7 @@ while running:
                 boss.attack_animation_timer+=dt                    
                 if not boss.attack_hit and boss.attack_animation_timer>=boss.attack_animation_speed:
                     boss.attack_hit=True
+                    swing2.play()
                     target=boss.attack_target
                     if target is not None and target in soldiers:
                         if boss.type!='grasshopper':
@@ -593,6 +613,7 @@ while running:
                 boss.is_attacking=False
                 if not boss.is_slashing_left and not boss.is_slashing_right:
                     boss.is_slashing_left=True
+                    swing1.play()
                 boss.slash_timer+=dt
                 if boss.slash_timer>=boss.slash_duration and not boss.is_slashing_right:
                     boss.is_slashing_left=False
@@ -603,6 +624,7 @@ while running:
                             soldier.hp-=boss.dmg
                     shake_intensity=15
                     boss.is_slashing_right=True
+                    swing1.play()
                 elif boss.slash_timer>=boss.slash_duration and boss.is_slashing_right:
                     boss.is_slashing_right=False
                     boss.slash_timer=0
@@ -610,7 +632,7 @@ while running:
                         soldier_center=pygame.math.Vector2(soldier.x,soldier.y)
                         if soldier_center.distance_to(boss.left_claw_pos)<(boss.claw_radius+20):
                             soldier.hp-=boss.dmg
-                    shake_intensity=25
+                    shake_intensity=15
                     skill=False
 
             elif boss.type=='grasshopper':
@@ -645,6 +667,7 @@ while running:
                             boss.start_x=boss.x
                             boss.start_y=boss.y
                             boss.untouchable=True
+                            jump.play()
 
                     #3. Flyingg
                     if boss.is_flying:
@@ -657,7 +680,8 @@ while running:
                             boss.untouchable=False
                             skill=False
                             furthestsoldier=False
-                            shake_intensity=max(50,shake_intensity)
+                            shake_intensity=max(30,shake_intensity)
+                            landing.play()
                             for s in soldiers[:]:
                                 if s.rect.colliderect(boss.rect):
                                     if s.type=='leafcutter' and leafcutter_buff>0:
@@ -707,7 +731,8 @@ while running:
                             boss.untouchable=False
                             skill=False
                             furthestsoldier=False
-                            shake_intensity=50
+                            shake_intensity=30
+                            landing.play()
                             for s in soldiers[:]:
                                     if s.rect.colliderect(boss.rect):
                                         if s.type=='leafcutter' and leafcutter_buff>0:
@@ -1088,6 +1113,10 @@ while running:
 
     
     #Global Rendering
+    for notification in notifications:
+        notification.update(dt)
+        if notification.y<-50:
+            notifications.remove(notification)
     if reward_chosen:
         black_screen.fill((0,0,0,darkness))
     if menu_on:
