@@ -12,7 +12,11 @@ Features:
  -Wood Ant(Ranged Unit)
  -Fire Ant(Melee unit with burn damage that grows in number)
  -Dracula Ant (Lifesteal unit that has the ability to heal itself)
-
+-Roguelike Card System that allows every run to be different and engaging:
+-Every time you defeat a boss, you get to pick 1 out of 3 cards that give your run a permanent buff, these may contains cards that give each class of soldiers its potential unlock.
+Controls:
+Space to Start Game and Replay
+Mouse Click for everything else in the game (click buttons, etc...)
 Installation Guide:
 Install game file from the game page: https://nnkd-kevin.itch.io/tinycolony1 (Exe file for Windows)
 

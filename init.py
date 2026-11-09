@@ -156,21 +156,30 @@ fire_buff=0
 leafcutter_buff=0
 dracula_buff=0
 black_buff=0
+wheat_buff=0
+salt_buff=0
+leaf_buff=0
+apple_seed_buff=0
+honey_buff=0
+blood_buff=0
+harvest_buff=0
 
 
 class SoundMenu:
     def __init__(self):
         self.toggled=False
         self.rect=pygame.Rect(300,200,900,450)
-        self.slider_rect=pygame.Rect(500,300,200,20)
-        self.slider_handle=pygame.Rect(500+100,285,20,50)
+        self.slider_rect=pygame.Rect(500,330,200,20)
+        self.slider_handle=pygame.Rect(500+100,315,20,50)
         self.dragged=False
         self.volume=0.5
     def draw(self,screen):
         pygame.draw.rect(screen,(235,219,200),self.rect,0,10)
         pygame.draw.rect(screen,(255,255,255),self.slider_rect,0,10)
         pygame.draw.rect(screen,(0,0,0),self.slider_handle,0,10)
-        draw_text(f'Music Volume: {self.volume*100:.0f}%',button_font,(0,0,0),400,220)
+        draw_text(f'Music Volume: {self.volume*100:.0f}%',button_font,(0,0,0),400,250)
+        draw_text('Settings',button_font,(0,0,0),300,210)
+        draw_text('Click M to close settings',text_font,(0,0,0),850,600)
 sound_menu=SoundMenu()
 
 class TutorialAnt:
@@ -222,7 +231,7 @@ class TutorialManager:
              'target':None,
              'condition':lambda:collected==True,
              'completed':False},
-            {"text":"You can see the extra materials you collected here.\nEach type of food has a small chance to drop its special material.\nClick the Return button to go back to your nest.",
+            {"text":f"You can see the extra materials you collected here.\nEach type of food has a 30% chance to drop its special material.\nClick the Return button to go back to your nest.",
              'target':"return_button",
              'condition':lambda:stage=='nest',
              'completed':False},
@@ -240,7 +249,7 @@ class TutorialManager:
             "completed":False},
             {"text":"Now keep collecting food everyday and grow your colony.\n Make sure to get your army ready before day 7.\n Our scout reported that a threat is approaching.",
              "target":None,
-             "condition":lambda:stage=='collecting',
+             "condition":lambda:stage=='collecting' and day>=2,
              "completed":False}]
         self.current_step=0
         self.is_waiting_to_advance=False
@@ -264,9 +273,11 @@ class TutorialManager:
         if step["condition"]() and not self.is_waiting_to_advance and not step.get("is_intro",False):
             self.is_waiting_to_advance=True
             if self.current_step<len(self.steps)-1:
-                step["text"]="Great job! Click the anywhere to continue."
+                step["text"]="Great job! Click anywhere to continue."
+                self.char_index=0
             else:
                 step["text"]="That's the end of the tutorial. Now manage the colony to survive the weeks"
+                self.char_index=0
     def advance(self):
         if self.is_waiting_to_advance or self.get_current_step().get('is_intro'):
             self.current_step+=1
@@ -275,7 +286,7 @@ class TutorialManager:
             if self.current_step>=len(self.steps):
                 return False
         return True
-    def draw(self,screen,dt):
+    def draw(self, screen, dt, nest, buttons, hatch_buttons, return_button_collect):
         if self.is_hidden:
             return
         
@@ -436,7 +447,7 @@ class InfoButton:
             self.cost='Cost: 5 calories'
         if self.type=='soldier':
             self.info='Add a soldier of the type below to your army'
-            self.cost='Cost: 3 calories + special ingredient for special ants\nLeafcutter Ant: 1 Leaf\nWood Ant: 1 Honey\nDracula Ant: 1 Blood\nFire Ant: 1 Apple Seed'
+            self.cost='Cost: 3 calories + special ingredient for special ants\nLeafcutter Ant: 1 Leaf: Tanky Unit\nWood Ant: 1 Honey: Ranged Unit\nDracula Ant: 1 Blood: Lifesteal During Hit\nFire Ant: 1 Apple Seed:Stack Burn Per Hit'
         if self.type=='wheat':
             self.info='Wheat'
             self.cost='Use 1 wheat to permanently increase Max HP of future ants by 1'
@@ -737,8 +748,8 @@ class Enemy:
             self.attacks2_right=[pygame.transform.flip(pygame.transform.rotate(pygame.transform.scale(pygame.image.load(f"{attack2_left_path}/{f}").convert_alpha(), (34*10,54*10)),-90),False,True) for f in os.listdir(attack2_left_path) if f.endswith(".png")]
             self.rect=pygame.Rect(x-34*5,y-54*5,250,200)   
             self.speed=100
-            self.hp=4000
-            self.maxhp=4000
+            self.hp=3000
+            self.maxhp=3000
             self.dmg=10
             self.range=100
             self.attack_speed=0.4
@@ -784,7 +795,7 @@ class Enemy:
             self.speed=200
             self.hp=10000
             self.maxhp=10000
-            self.dmg=6
+            self.dmg=10
             self.range=100
             self.attack_speed=1
             self.attack_timer=0

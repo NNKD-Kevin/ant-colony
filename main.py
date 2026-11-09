@@ -6,7 +6,16 @@ import sys
 pygame.mixer.init()
 
 from init import *
-
+tm = tutorial_manager
+tm.steps[1]['condition'] = lambda: stage == 'collecting'
+tm.steps[2]['condition'] = lambda: any(w.carrying for w in workers)
+tm.steps[3]['condition'] = lambda: calories > 0
+tm.steps[4]['condition'] = lambda: collected == True
+tm.steps[5]['condition'] = lambda: stage == 'nest'
+tm.steps[6]['condition'] = lambda: hatching == True
+tm.steps[7]['condition'] = lambda: len(workers) == 2
+tm.steps[8]['condition'] = lambda: day >= 2
+tm.steps[9]['condition'] = lambda: stage == 'collecting' and day >= 2
 #Game Loop
 while running:
     dt = clock.tick(60) / 1000
@@ -122,7 +131,7 @@ while running:
                                 worker.carrying=None
                                 worker.x=nest.x+random.randint(-50,50)
                                 worker.y=nest.y+random.randint(-50,50)
-                        if button.function=='sleep':
+                        if button.function=='sleep' and not transition:
                             button_click.play()
                             day+=1
                             stamina=max_stamina
@@ -175,7 +184,7 @@ while running:
                                     calories-=5
                                     max_foods+=1
                                     notifications.append(Notification(300,100,'Successfully hatched a scout ant',(0,255,0)))
-                                elif button.type=='soldier ant' and calories>=3:
+                                elif button.type=='black ant' and calories>=3:
                                     calories-=3
                                     soldiers.append(SoldierAnt(1500,850,'black',hp_buff,power_buff,black_buff,leafcutter_buff,wood_buff,fire_buff,dracula_buff))
                                     notifications.append(Notification(300,100,'Successfully hatched a black ant',(0,255,0)))
@@ -258,15 +267,21 @@ while running:
                                 if button.type=='wheat' and wheat>0:
                                     wheat-=1
                                     hp_buff+=1
-                                if button.type=='salt' and salt>0:
+                                    notifications.append(Notification(300,100,'Successfully increase HP of future ants by 1',(0,255,0)))
+                                elif button.type=='salt' and salt>0:
                                     salt-=1
                                     power_buff+=1
-                                if button.type=='wheat10x' and wheat>=10:
+                                    notifications.append(Notification(300,100,'Successfully increase damage of future ants by 1',(0,255,0)))
+                                elif button.type=='wheat10x' and wheat>=10:
                                     wheat-=10
                                     hp_buff+=10
-                                if button.type=='salt10x' and salt>=10:
+                                    notifications.append(Notification(300,100,'Successfully increase HP of future ants by 10',(0,255,0)))
+                                elif button.type=='salt10x' and salt>=10:
                                     salt-=10
                                     power_buff+=10
+                                    notifications.append(Notification(300,100,'Successfully increase damage of future ants by 10',(0,255,0)))
+                                else:
+                                    notifications.append(Notification(600,100,'Insufficient ingredients!',(255,0,0)))
                         else:
                             button.border_color=(0,0,0)
                             button.color=button.passive_color
@@ -293,6 +308,13 @@ while running:
                             button_click.play()
                             reward_chosen=True
                             cards.append(card)
+                            if card.index==0:leaf_buff+=1
+                            elif card.index==1:apple_seed_buff+=1
+                            elif card.index==2:honey_buff+=1
+                            elif card.index==3:blood_buff+=1
+                            elif card.index==4:wheat_buff+=1
+                            elif card.index==5:salt_buff+=1
+                            elif card.index==13:harvest_buff+=1
                             if card.index==6:
                                 wheat+=10
                                 salt+=10
@@ -329,6 +351,7 @@ while running:
             bosses.append(mantis)
             bosses[0].x,bosses[0].y=500,0
             dead_ants=[]
+            notifications.append(Notification(300,100,'An enemy mantis approached!',(255,0,0)))
         elif day==8 and not combat2_won:
             choosecombat=True
             bosses.append(grasshopper)
@@ -338,6 +361,7 @@ while running:
                 soldier.y=1500
             bosses[0].x,bosses[0].y=500,0
             dead_ants=[]
+            notifications.append(Notification(300,100,'An enemy grasshopper approached!',(255,0,0)))
         elif day==10 and not combat3_won:
             choosecombat=True
             stage='combat'
@@ -345,13 +369,15 @@ while running:
                 soldier.x=random.randint(100,1400)
                 soldier.y=1500
             bosses.append(mantis)
-            mantis.maxhp=50000
-            mantis.hp=50000
-            mantis.dmg=16
+            mantis.maxhp=100000
+            mantis.hp=100000
+            mantis.dmg=30
             mantis.attack_speed=0.1
             mantis.attack_duration=0.3
+            mantis.slash_duration=0.3
             bosses[0].x,bosses[0].y=500,0
             dead_ants=[]
+            notifications.append(Notification(300,100,'A fiercer mantis approached!',(255,0,0)))
         elif day==13 and not combat4_won:
             choosecombat=True
             stage='combat'
@@ -362,8 +388,12 @@ while running:
             grasshopper.maxhp=500000
             grasshopper.hp=500000
             grasshopper.dmg=50
+            grasshopper.attack_speed=0.4
+            grasshopper.attack_duration=0.3
+            grasshopper.skill_duration=None
             bosses[0].x,bosses[0].y=500,0
             dead_ants=[]
+            notifications.append(Notification(300,100,'A super strong grasshopper approached!',(255,0,0)))
 
 
 
@@ -389,14 +419,14 @@ while running:
                 pop.play()
                 if worker.carrying.type=='chips':calories+=1
                 stamina-=1/len(workers)
-                gacha=random.randint(1,10)+3*cards.count(card for card in cards if card.index==13)
+                gacha=random.randint(1,10)+3*harvest_buff
                 if gacha>7:
-                    if worker.carrying.type=='mosquito': blood+=1+2*cards.count(card for card in cards if card.index==3)
-                    if worker.carrying.type=='bread':wheat+=1+2*cards.count(card for card in cards if card.index==4)
-                    if worker.carrying.type=='apple':apple_seed+=1+2*cards.count(card for card in cards if card.index==1)
-                    if worker.carrying.type=='chips':salt+=1+2*cards.count(card for card in cards if card.index==5)
-                    if worker.carrying.type=='honeycomb':honey+=1+2*cards.count(card for card in cards if card.index==2)
-                    if worker.carrying.type=='leaf':leaf+=1+2*cards.count(card for card in cards if card.index==0)
+                    if worker.carrying.type=='mosquito': blood+=1+2*blood_buff
+                    if worker.carrying.type=='bread':wheat+=1+2*wheat_buff
+                    if worker.carrying.type=='apple':apple_seed+=1+2*apple_seed_buff
+                    if worker.carrying.type=='chips':salt+=1+2*salt_buff
+                    if worker.carrying.type=='honeycomb':honey+=1+2*honey_buff
+                    if worker.carrying.type=='leaf':leaf+=1+2*leaf_buff
                     harvest.append(worker.carrying.type)
                 worker.carrying=None
 
@@ -405,15 +435,15 @@ while running:
                     if worker.carrying:
                         calories+=2
                         if worker.carrying.type=='chips':calories+=1
-                        gacha=random.randint(1,10)
-                        if gacha in [8,9,10]:
+                        gacha=random.randint(1,10)+3*harvest_buff
+                        if gacha >7:
                             if worker.carrying!=None:
-                                if worker.carrying.type=='mosquito': blood+=1
-                                if worker.carrying.type=='bread':wheat+=1
-                                if worker.carrying.type=='apple':apple_seed+=1
-                                if worker.carrying.type=='chips':salt+=1
-                                if worker.carrying.type=='honeycomb':honey+=1
-                                if worker.carrying.type=='leaf':leaf+=1
+                                if worker.carrying.type=='mosquito': blood+=1+2*blood_buff
+                                if worker.carrying.type=='bread':wheat+=1+2*wheat_buff
+                                if worker.carrying.type=='apple':apple_seed+=1+2*apple_seed_buff
+                                if worker.carrying.type=='chips':salt+=1+2*salt_buff
+                                if worker.carrying.type=='honeycomb':honey+=1+2*honey_buff
+                                if worker.carrying.type=='leaf':leaf+=1+2*leaf_buff
                                 harvest.append(worker.carrying.type)
                         worker.carrying=None
                 
@@ -429,14 +459,6 @@ while running:
             skill=False
             choosecombat=False
         if bosses:
-            ant_spawn_timer-=dt
-            if ant_spawn_timer<0:
-                ant_spawn_timer=1
-                soldiers.append(SoldierAnt(1500,850,'black',0,0,0,0,0,0,0))
-                soldiers.append(SoldierAnt(1500,850,'wood',0,0,0,0,0,0,0))
-                soldiers.append(SoldierAnt(1500,850,'dracula',0,0,0,0,0,0,0))
-                soldiers.append(SoldierAnt(1500,850,'fire',0,0,0,0,0,0,0))
-                soldiers.append(SoldierAnt(1500,850,'leafcutter',0,0,0,0,0,0,0))
             if not bosses[0].is_attacking and not skill:
                 bosses[0].move_towards(dt)
             elif not skill:
@@ -463,11 +485,7 @@ while running:
                             if not bosses[0].untouchable:
                                 bosses[0].hp-=soldier.dmg
                             if soldier.type=='dracula':
-                                if soldier.hp<soldier.maxhp:
-                                    if soldier.hp+soldier.dmg/2>soldier.maxhp:
-                                        soldier.hp=soldier.maxhp
-                                    else:
-                                        soldier.hp+=soldier.dmg*(0.5+0.25*dracula_buff)
+                                soldier.hp=min(soldier.maxhp,soldier.hp+soldier.dmg*(0.5+0.25*dracula_buff))
                     if soldier.attack_animation_timer>=soldier.attack_duration:
                         soldier.is_attacking=False
                         soldier.attack_animation_timer=0
@@ -526,17 +544,6 @@ while running:
                 if acid.rect.colliderect(bosses[0].rect) and not bosses[0].untouchable:
                     bosses[0].hp-=acid.dmg
                     acids.remove(acid)
-                if bosses[0].hp<=0:
-                    for soldier in soldiers:
-                        soldier.hp=soldier.maxhp
-                    try:
-                        bosses.remove(bosses[0])
-                    except ValueError:
-                        pass
-                    if stage=='combat':
-                        stage='nest'
-                        for s in soldiers[:]:
-                            s.hp=s.maxhp
         if bosses and not skill:
             boss=bosses[0]
             for s in soldiers[:]:
@@ -622,7 +629,7 @@ while running:
                         soldier_center=pygame.math.Vector2(soldier.x,soldier.y)
                         if soldier_center.distance_to(boss.right_claw_pos)<(boss.claw_radius+20):
                             soldier.hp-=boss.dmg
-                    shake_intensity=15
+                    shake_intensity=5
                     boss.is_slashing_right=True
                     swing1.play()
                 elif boss.slash_timer>=boss.slash_duration and boss.is_slashing_right:
@@ -632,7 +639,7 @@ while running:
                         soldier_center=pygame.math.Vector2(soldier.x,soldier.y)
                         if soldier_center.distance_to(boss.left_claw_pos)<(boss.claw_radius+20):
                             soldier.hp-=boss.dmg
-                    shake_intensity=15
+                    shake_intensity=5
                     skill=False
 
             elif boss.type=='grasshopper':
@@ -644,8 +651,8 @@ while running:
                         if furthest_soldier:
                             bosses[0].target_x=furthest_soldier.x
                             bosses[0].target_y=furthest_soldier.y-150
-                        if boss.target_y>500:
-                            boss.target_y=500
+                        if boss.target_y>600:
+                            boss.target_y=600
                         if boss.target_y<250:
                             boss.target_y=250
                         if boss.target_x<250:
@@ -680,7 +687,7 @@ while running:
                             boss.untouchable=False
                             skill=False
                             furthestsoldier=False
-                            shake_intensity=max(30,shake_intensity)
+                            shake_intensity=max(20,shake_intensity)
                             landing.play()
                             for s in soldiers[:]:
                                 if s.rect.colliderect(boss.rect):
@@ -731,7 +738,7 @@ while running:
                             boss.untouchable=False
                             skill=False
                             furthestsoldier=False
-                            shake_intensity=30
+                            shake_intensity=20
                             landing.play()
                             for s in soldiers[:]:
                                     if s.rect.colliderect(boss.rect):
@@ -784,7 +791,7 @@ while running:
                 #Nest Stage        
         timeline=pygame.Rect(150,50,1200,30)
         buttons=[Button(950,150,'collection'),Button(400,580,'hatch'),Button(400,280,'storage'),Button(1000,600,'sleep')]
-        hatch_buttons=[HatchButton(200,450,'worker ant'),HatchButton(600,450,'soldier ant'),HatchButton(1000,450,'scout ant'),HatchButton(600,515,'leafcutter ant'),HatchButton(600,580,'wood ant'),HatchButton(600,645,'fire ant'),HatchButton(600,710,'dracula ant'),
+        hatch_buttons=[HatchButton(200,450,'worker ant'),HatchButton(600,450,'black ant'),HatchButton(1000,450,'scout ant'),HatchButton(600,515,'leafcutter ant'),HatchButton(600,580,'wood ant'),HatchButton(600,645,'fire ant'),HatchButton(600,710,'dracula ant'),
                HatchButton(475,450,'worker10x'),HatchButton(1275,450,'scout10x'),HatchButton(875,450,'soldier10x'),HatchButton(875,515,'leafcutter10x'),HatchButton(875,580,'wood10x'),HatchButton(875,645,'fire10x'),HatchButton(875,710,'dracula10x')]
         hatching=False
         storaging=False
@@ -807,6 +814,28 @@ while running:
         combat4_won=False
         harvest=[]
         dead_ants=[]
+        cards = []
+        choosing_cards = []
+        reward_chosen = True
+        wood_buff = 0
+        fire_buff = 0
+        leafcutter_buff = 0
+        dracula_buff = 0
+        black_buff = 0
+        wheat_buff=0
+        salt_buff=0
+        leaf_buff=0
+        apple_seed_buff=0
+        honey_buff=0
+        blood_buff=0
+        harvest_buff=0
+        skill = False
+        chooseskill = 1
+        furthestsoldier = False
+
+        # Effects
+        shake_intensity = 0
+        darkness = 0
 
 
 
@@ -851,8 +880,8 @@ while running:
         draw_text(f'Day {day+1}',button_font,(0,0,0),150,5)
         for button in buttons:
             button.draw(screen)
-        pygame.draw.rect(screen,(240,219,211),(50,120,280,120))
-        pygame.draw.rect(screen,(0,0,0),(50,120,280,120),width=5)
+        pygame.draw.rect(screen,(240,219,211),(50,120,380,120))
+        pygame.draw.rect(screen,(0,0,0),(50,120,380,120),width=5)
         screen.blit(food_icon,(60,130))
         draw_text(str(calories),ui_font,(0,0,0),170,130)
         draw_text("Click F11 to toggle fullscreen",text_font,(0,0,0),1100,10)
@@ -862,8 +891,8 @@ while running:
             pygame.draw.rect(screen,(235,219,200),menu)
             pygame.draw.rect(screen,(0,0,0),menu,width=3)
             return_button_nest.draw(screen)
-            pygame.draw.rect(screen,(240,219,211),(50,120,280,120))
-            pygame.draw.rect(screen,(0,0,0),(50,120,280,120),width=5)
+            pygame.draw.rect(screen,(240,219,211),(50,120,380,120))
+            pygame.draw.rect(screen,(0,0,0),(50,120,380,120),width=5)
             if hatching:
                 for button in hatch_buttons:
                     button.draw(screen)
@@ -871,6 +900,9 @@ while running:
                     icon.draw(screen)
                 for cocoon in cocoons:
                     cocoon.draw(screen)
+                for icon in hatch_icons:
+                    icon.update(leaf,honey,apple_seed,blood,wheat,salt)
+                    icon.draw(screen)
                 for icon in info_icons:
                     if icon.hovered:
                         x,y=icon.x,icon.y
@@ -883,9 +915,6 @@ while running:
                         pygame.draw.rect(screen,(255,200,200),info_rect)
                         draw_text(icon.info,text_font,(0,0,0),x+10,y-130)
                         draw_text(icon.cost,text_font,(0,0,0),x+10,y-110)
-                for icon in hatch_icons:
-                    icon.update(leaf,honey,apple_seed,blood,wheat,salt)
-                    icon.draw(screen)
                 draw_text(f"Number of workers: {len(workers)}",text_font,(0,0,0),250,750)
                 draw_text(f"Number of foods: {max_foods}",text_font,(0,0,0),1025,750)
             if storaging:
@@ -1070,11 +1099,6 @@ while running:
                 boss.draw(screen)
             boss.hbupdate()
             boss.hb()
-            if boss.type=='mantis':
-                # Draw left claw hitbox (Red)
-                pygame.draw.circle(screen, (255, 0, 0), (int(boss.left_claw_pos.x), int(boss.left_claw_pos.y)), boss.claw_radius, 2)
-                # Draw right claw hitbox (Blue)
-                pygame.draw.circle(screen, (0, 0, 255), (int(boss.right_claw_pos.x), int(boss.right_claw_pos.y)), boss.claw_radius, 2)
                 
             pygame.draw.circle(screen,(255,200,9),(300,50),10)
             draw_text(f'{burn}',text_font,(255,255,255),310,40)
@@ -1129,7 +1153,7 @@ while running:
     else:
         darkness=0
     if tutorial_on and stage!='start':
-        tutorial_manager.draw(screen,dt)
+        tutorial_manager.draw(screen, dt, nest, buttons, hatch_buttons, return_button_collect)
         if day<3:
             tutorial_ant.draw(screen)
     if sound_menu.toggled:
