@@ -29,6 +29,8 @@ current_music=''
 
 pygame.init()
 pygame.mixer.init()
+icon_img = pygame.image.load(get_resource_path('assets/icon.png'))
+pygame.display.set_icon(icon_img)
 screen = pygame.display.set_mode((1500, 850))
 is_fullscreen=False
 pygame.display.set_caption("Tiny Colony")

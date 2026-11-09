@@ -390,7 +390,7 @@ while running:
             grasshopper.dmg=50
             grasshopper.attack_speed=0.4
             grasshopper.attack_duration=0.3
-            grasshopper.skill_duration=None
+            grasshopper.skill_duration=0.5
             bosses[0].x,bosses[0].y=500,0
             dead_ants=[]
             notifications.append(Notification(300,100,'A super strong grasshopper approached!',(255,0,0)))
